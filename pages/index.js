@@ -10,7 +10,7 @@ const CONFIRMED = [
   { name: '노건준', role: '성균관대 인공지능학과 학생', sector: 'univ',   tag: '대학' },
   { name: '이현웅', role: 'YTN 앵커',               sector: 'media',   tag: '미디어' },
   { name: '박동찬', role: '파일러 CTO',              sector: 'startup', tag: '스타트업' },
-  { name: '김영현', role: '국정원 전무',              sector: 'public',  tag: '공공' },
+  { name: '김영현', role: '국OO 전무',               sector: 'public',  tag: '공공' },
   { name: '함창욱', role: '신용보증기금 팀장',         sector: 'finance', tag: '금융' },
   { name: '박재훈', role: '국민은행 팀장',            sector: 'finance', tag: '금융' },
   { name: '김정년', role: 'CYP 본부장',              sector: 'startup', tag: '스타트업' },
