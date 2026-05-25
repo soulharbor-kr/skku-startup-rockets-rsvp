@@ -24,7 +24,7 @@ const WAITING = [
   { name: '이강훈', role: '도우물류 대표',              sector: 'startup', tag: '스타트업' },
   { name: '이흥규', role: '라이폴리 대표',              sector: 'startup', tag: '스타트업' },
   { name: '박준호', role: '비엑스컨설팅 대표',           sector: 'startup', tag: '스타트업' },
-  { name: '조유진', role: '스마일게이트 팀장',           sector: 'startup', tag: '스타트업' },
+  { name: '조유진', role: '스마일게이트 인베스트먼트 팀장', sector: 'invest',  tag: '투자' },
   { name: '문희',   role: '한국투액셀러레이터 팀장',      sector: 'invest',  tag: '투자' },
   { name: '승주완', role: '성균관대 책임',              sector: 'univ',    tag: '대학' },
   { name: '김준석', role: '더파운더스(아누아) 본부장',    sector: 'startup', tag: '스타트업' },
