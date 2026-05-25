@@ -125,6 +125,10 @@ export default function Home() {
         <h1 className="hero-title">
           스타트업<br /><em>동문 모임</em>
         </h1>
+        <p className="hero-desc">
+          격식 없이, 반가운 얼굴들끼리 편하게 모이는 자리입니다.<br />
+          <span className="hero-notice">※ 05학번 이상 선배님께는 소정의 참가비 <em>3만원</em>을 양해 부탁드립니다.</span>
+        </p>
         <div className="hero-meta">
           <div><strong>2026년 6월 2일 (화)</strong></div>
           <div>오후 7:00 — 10:00</div>
