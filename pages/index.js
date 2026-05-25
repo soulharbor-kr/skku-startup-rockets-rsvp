@@ -13,7 +13,7 @@ const CONFIRMED = [
   { name: '김영현', role: '국OO 전무',               sector: 'public',  tag: '공공' },
   { name: '함창욱', role: '신용보증기금 팀장',         sector: 'finance', tag: '금융' },
   { name: '박재훈', role: '국민은행 팀장',            sector: 'finance', tag: '금융' },
-  { name: '김정년', role: 'CYP 본부장',              sector: 'startup', tag: '스타트업' },
+  { name: '김정년', role: 'CYP 본부장',              sector: 'invest',  tag: '투자' },
   { name: '문예슬', role: '피클스 대표 / 성형외과 원장', sector: 'startup', tag: '스타트업' },
 ]
 
