@@ -1,14 +1,13 @@
 import { useState, useEffect, useCallback } from 'react'
 import Head from 'next/head'
 
-function initials(name) {
-  return name.slice(0, 2)
-}
+function initials(name) { return name.slice(0, 2) }
 
 function maskPhone(phone) {
   return phone.replace(/(\d{3})-?(\d{3,4})-?(\d{4})/, '$1-****-$3')
 }
 
+/* ── 참석자 편집 모달 (attendees 테이블) ── */
 function EditModal({ attendee, onClose, onSave }) {
   const [form, setForm] = useState({
     phone: attendee.phone || '',
@@ -16,40 +15,29 @@ function EditModal({ attendee, onClose, onSave }) {
     intro: attendee.intro || '',
   })
   const [saving, setSaving] = useState(false)
-  const [error, setError] = useState('')
-
+  const [error,  setError]  = useState('')
   const handleClose = useCallback(() => onClose(), [onClose])
 
   useEffect(() => {
     const onEsc = (e) => { if (e.key === 'Escape') handleClose() }
     window.addEventListener('keydown', onEsc)
     document.body.style.overflow = 'hidden'
-    return () => {
-      window.removeEventListener('keydown', onEsc)
-      document.body.style.overflow = ''
-    }
+    return () => { window.removeEventListener('keydown', onEsc); document.body.style.overflow = '' }
   }, [handleClose])
 
   async function handleSave() {
-    setSaving(true)
-    setError('')
+    setSaving(true); setError('')
     try {
-      const res = await fetch(`/api/attendee/${attendee.id}`, {
+      const res  = await fetch(`/api/attendee/${attendee.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
       })
       const data = await res.json()
-      if (res.ok) {
-        onSave(data)
-      } else {
-        setError(data.error || '저장 중 오류가 발생했습니다.')
-      }
-    } catch {
-      setError('네트워크 오류가 발생했습니다.')
-    } finally {
-      setSaving(false)
-    }
+      if (res.ok) onSave(data)
+      else setError(data.error || '저장 중 오류가 발생했습니다.')
+    } catch { setError('네트워크 오류가 발생했습니다.') }
+    finally  { setSaving(false) }
   }
 
   return (
@@ -66,33 +54,21 @@ function EditModal({ attendee, onClose, onSave }) {
         <div className="modal-body">
           <div className="form-group">
             <label className="form-label">전화번호</label>
-            <input
-              type="text"
-              className="form-input"
-              value={form.phone}
+            <input type="text" className="form-input" value={form.phone}
               onChange={(e) => setForm({ ...form, phone: e.target.value })}
-              placeholder="010-0000-0000"
-            />
+              placeholder="010-0000-0000" />
           </div>
           <div className="form-group">
             <label className="form-label">이메일</label>
-            <input
-              type="email"
-              className="form-input"
-              value={form.email}
+            <input type="email" className="form-input" value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
-              placeholder="email@example.com"
-            />
+              placeholder="email@example.com" />
           </div>
           <div className="form-group">
             <label className="form-label">한 줄 자기소개</label>
-            <textarea
-              className="form-textarea"
-              value={form.intro}
+            <textarea className="form-textarea" rows={3} value={form.intro}
               onChange={(e) => setForm({ ...form, intro: e.target.value })}
-              placeholder="현재 하는 일이나 관심사를 짧게 소개해 주세요"
-              rows={3}
-            />
+              placeholder="현재 하는 일이나 관심사를 짧게 소개해 주세요" />
           </div>
           {error && <div className="form-error">{error}</div>}
         </div>
@@ -107,32 +83,135 @@ function EditModal({ attendee, onClose, onSave }) {
   )
 }
 
-function AttendeeCard({ person, avatarClass, onEdit }) {
+/* ── 신규 RSVP 편집 모달 (rsvps 테이블) ── */
+function EditRsvpModal({ rsvp, onClose, onSave }) {
+  const [form, setForm] = useState({
+    contact:     rsvp.contact     || '',
+    affiliation: rsvp.affiliation || '',
+    intro:       rsvp.intro       || '',
+  })
+  const [saving, setSaving] = useState(false)
+  const [error,  setError]  = useState('')
+  const handleClose = useCallback(() => onClose(), [onClose])
+
+  useEffect(() => {
+    const onEsc = (e) => { if (e.key === 'Escape') handleClose() }
+    window.addEventListener('keydown', onEsc)
+    document.body.style.overflow = 'hidden'
+    return () => { window.removeEventListener('keydown', onEsc); document.body.style.overflow = '' }
+  }, [handleClose])
+
+  async function handleSave() {
+    setSaving(true); setError('')
+    try {
+      const res  = await fetch(`/api/rsvp/${rsvp.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      })
+      const data = await res.json()
+      if (res.ok) onSave(data)
+      else setError(data.error || '저장 중 오류가 발생했습니다.')
+    } catch { setError('네트워크 오류가 발생했습니다.') }
+    finally  { setSaving(false) }
+  }
+
+  return (
+    <div className="modal-overlay" onClick={handleClose}>
+      <div className="modal" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-header">
+          <div>
+            <div className="section-label">정보 수정</div>
+            <div className="modal-title">{rsvp.name}</div>
+            {rsvp.affiliation && <div className="modal-subtitle">{rsvp.affiliation}</div>}
+          </div>
+          <button className="modal-close" onClick={handleClose}>✕</button>
+        </div>
+        <div className="modal-body">
+          <div className="form-group">
+            <label className="form-label">연락처</label>
+            <input type="text" className="form-input" value={form.contact}
+              onChange={(e) => setForm({ ...form, contact: e.target.value })}
+              placeholder="010-0000-0000 또는 email@example.com" />
+          </div>
+          <div className="form-group">
+            <label className="form-label">소속 / 직책</label>
+            <input type="text" className="form-input" value={form.affiliation}
+              onChange={(e) => setForm({ ...form, affiliation: e.target.value })}
+              placeholder="회사명 · 직책" />
+          </div>
+          <div className="form-group">
+            <label className="form-label">한 줄 자기소개</label>
+            <textarea className="form-textarea" rows={3} value={form.intro}
+              onChange={(e) => setForm({ ...form, intro: e.target.value })}
+              placeholder="현재 하는 일이나 관심사를 짧게 소개해 주세요" />
+          </div>
+          {error && <div className="form-error">{error}</div>}
+        </div>
+        <div className="modal-footer">
+          <button className="modal-btn-cancel" onClick={handleClose}>취소</button>
+          <button className="modal-btn-save" onClick={handleSave} disabled={saving}>
+            {saving ? '저장 중...' : '저장하기'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/* ── 참석 확정 카드 (대기로 전환 가능) ── */
+function AttendeeCard({ person, onEdit, onDemote }) {
+  const [demoting, setDemoting] = useState(false)
+  const [loading,  setLoading]  = useState(false)
+
+  async function handleDemote() {
+    setLoading(true)
+    await onDemote(person)
+    setLoading(false); setDemoting(false)
+  }
+
   return (
     <div className="attendee-card">
-      <div className={`avatar ${avatarClass}`}>{initials(person.name)}</div>
+      <div className="avatar avatar-blue">{initials(person.name)}</div>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div className="attendee-name">{person.name}</div>
         <div className="attendee-role">{person.role}</div>
         {person.intro && <div className="attendee-intro">{person.intro}</div>}
         {person.phone && <div className="attendee-contact">📞 {maskPhone(person.phone)}</div>}
         {person.email && <div className="attendee-contact">✉️ {person.email}</div>}
-        <span className={`sector-tag st-${person.sector}`}>{person.tag}</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px', flexWrap: 'wrap' }}>
+          <span className={`sector-tag st-${person.sector}`}>{person.tag}</span>
+          {!demoting ? (
+            <button className="card-demote-btn" onClick={() => setDemoting(true)}>
+              → 대기로 전환
+            </button>
+          ) : (
+            <div className="confirm-inline">
+              <span className="confirm-question">대기로 전환?</span>
+              <button className="confirm-yes" onClick={handleDemote} disabled={loading}>
+                {loading ? '...' : '예'}
+              </button>
+              <button className="confirm-no" onClick={() => setDemoting(false)} disabled={loading}>
+                취소
+              </button>
+            </div>
+          )}
+        </div>
       </div>
       <button className="card-edit-btn" onClick={() => onEdit(person)} title="정보 수정">✏️</button>
     </div>
   )
 }
 
+/* ── 참석 대기 카드 (확정 전환 가능) ── */
 function WaitingCard({ person, onEdit, onConfirm }) {
   const [confirming, setConfirming] = useState(false)
-  const [loading, setLoading]       = useState(false)
+  const [loading,    setLoading]    = useState(false)
 
   async function handleConfirm() {
     setLoading(true)
     await onConfirm(person)
-    setLoading(false)
-    setConfirming(false)
+    setLoading(false); setConfirming(false)
   }
 
   return (
@@ -141,9 +220,9 @@ function WaitingCard({ person, onEdit, onConfirm }) {
       <div style={{ flex: 1, minWidth: 0 }}>
         <div className="attendee-name">{person.name}</div>
         <div className="attendee-role">{person.role}</div>
-        {person.intro  && <div className="attendee-intro">{person.intro}</div>}
-        {person.phone  && <div className="attendee-contact">📞 {maskPhone(person.phone)}</div>}
-        {person.email  && <div className="attendee-contact">✉️ {person.email}</div>}
+        {person.intro && <div className="attendee-intro">{person.intro}</div>}
+        {person.phone && <div className="attendee-contact">📞 {maskPhone(person.phone)}</div>}
+        {person.email && <div className="attendee-contact">✉️ {person.email}</div>}
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px', flexWrap: 'wrap' }}>
           <span className={`sector-tag st-${person.sector}`}>{person.tag}</span>
           {!confirming ? (
@@ -168,33 +247,38 @@ function WaitingCard({ person, onEdit, onConfirm }) {
   )
 }
 
-function RsvpCard({ rsvp }) {
+/* ── 신규 RSVP 카드 ── */
+function RsvpCard({ rsvp, onEdit }) {
   return (
     <div className="attendee-card">
       <div className="avatar avatar-new">{initials(rsvp.name)}</div>
-      <div>
+      <div style={{ flex: 1, minWidth: 0 }}>
         <div className="attendee-name">{rsvp.name}</div>
         {rsvp.affiliation && <div className="attendee-role">{rsvp.affiliation}</div>}
-        {rsvp.intro && <div className="attendee-intro">{rsvp.intro}</div>}
+        {rsvp.intro       && <div className="attendee-intro">{rsvp.intro}</div>}
         <span className="sector-tag st-new">신규</span>
       </div>
+      <button className="card-edit-btn" onClick={() => onEdit(rsvp)} title="정보 수정">✏️</button>
     </div>
   )
 }
 
+/* ── 메인 페이지 ── */
 export default function Home() {
   const [confirmedList, setConfirmedList] = useState([])
-  const [waitingList, setWaitingList]     = useState([])
-  const [newRsvps, setNewRsvps]           = useState([])
-  const [tab, setTab]                     = useState('confirmed')
-  const [editTarget, setEditTarget]       = useState(null)
+  const [waitingList,   setWaitingList]   = useState([])
+  const [newRsvps,      setNewRsvps]      = useState([])
+  const [tab,           setTab]           = useState('confirmed')
+
+  const [editTarget,    setEditTarget]    = useState(null)  // attendees 편집
+  const [rsvpEditTarget, setRsvpEditTarget] = useState(null) // rsvps 편집
 
   const [form, setForm] = useState({
     name: '', contact: '', affiliation: '', intro: '', attendance: 'yes', message: '',
   })
-  const [submitted, setSubmitted]     = useState(false)
-  const [submitting, setSubmitting]   = useState(false)
-  const [error, setError]             = useState('')
+  const [submitted,    setSubmitted]    = useState(false)
+  const [submitting,   setSubmitting]   = useState(false)
+  const [error,        setError]        = useState('')
   const [submittedName, setSubmittedName] = useState('')
 
   useEffect(() => {
@@ -204,8 +288,7 @@ export default function Home() {
         if (!Array.isArray(data)) return
         setConfirmedList(data.filter((a) => a.status === 'confirmed'))
         setWaitingList(data.filter((a) => a.status === 'waiting'))
-      })
-      .catch(() => {})
+      }).catch(() => {})
 
     fetch('/api/attendees')
       .then((r) => r.json())
@@ -213,12 +296,20 @@ export default function Home() {
       .catch(() => {})
   }, [])
 
+  /* attendees 편집 저장 */
   function handleEditSave(updated) {
     setConfirmedList((prev) => prev.map((a) => (a.id === updated.id ? updated : a)))
     setWaitingList((prev)   => prev.map((a) => (a.id === updated.id ? updated : a)))
     setEditTarget(null)
   }
 
+  /* rsvps 편집 저장 */
+  function handleRsvpEditSave(updated) {
+    setNewRsvps((prev) => prev.map((r) => (r.id === updated.id ? updated : r)))
+    setRsvpEditTarget(null)
+  }
+
+  /* 대기 → 확정 */
   async function handleConfirm(person) {
     try {
       const res = await fetch(`/api/attendee/${person.id}`, {
@@ -232,36 +323,47 @@ export default function Home() {
         setConfirmedList((prev) => [...prev, updated])
         setTab('confirmed')
       }
-    } catch {
-      // 실패 시 카드 상태는 그대로 유지됨
-    }
+    } catch {}
   }
 
+  /* 확정 → 대기 */
+  async function handleDemote(person) {
+    try {
+      const res = await fetch(`/api/attendee/${person.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'waiting' }),
+      })
+      if (res.ok) {
+        const updated = await res.json()
+        setConfirmedList((prev) => prev.filter((a) => a.id !== updated.id))
+        setWaitingList((prev) => [...prev, updated])
+        setTab('waiting')
+      }
+    } catch {}
+  }
+
+  /* RSVP 폼 제출 */
   async function handleSubmit(e) {
     e.preventDefault()
-    setSubmitting(true)
-    setError('')
+    setSubmitting(true); setError('')
     try {
-      const res = await fetch('/api/rsvp', {
+      const res  = await fetch('/api/rsvp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
       })
       const data = await res.json()
       if (res.ok) {
-        setSubmittedName(form.name)
-        setSubmitted(true)
+        setSubmittedName(form.name); setSubmitted(true)
         if (form.attendance === 'yes' && data.rsvp) {
           setNewRsvps((prev) => [data.rsvp, ...prev])
         }
       } else {
         setError(data.error || '오류가 발생했습니다.')
       }
-    } catch {
-      setError('네트워크 오류가 발생했습니다.')
-    } finally {
-      setSubmitting(false)
-    }
+    } catch { setError('네트워크 오류가 발생했습니다.') }
+    finally  { setSubmitting(false) }
   }
 
   const totalExpected = confirmedList.length + newRsvps.length
@@ -274,21 +376,14 @@ export default function Home() {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
 
-      {editTarget && (
-        <EditModal
-          attendee={editTarget}
-          onClose={() => setEditTarget(null)}
-          onSave={handleEditSave}
-        />
-      )}
+      {editTarget     && <EditModal     attendee={editTarget}     onClose={() => setEditTarget(null)}     onSave={handleEditSave} />}
+      {rsvpEditTarget && <EditRsvpModal rsvp={rsvpEditTarget}     onClose={() => setRsvpEditTarget(null)} onSave={handleRsvpEditSave} />}
 
       {/* HERO */}
       <section className="hero">
         <div className="hero-line" />
         <div className="hero-eyebrow">Startup Alumni Gathering · 2026</div>
-        <h1 className="hero-title">
-          스타트업<br /><em>동문 모임</em>
-        </h1>
+        <h1 className="hero-title">스타트업<br /><em>동문 모임</em></h1>
         <p className="hero-desc">
           격식 없이, 반가운 얼굴들끼리 편하게 모이는 자리입니다.<br />
           <span className="hero-notice">※ 05학번 이상 선배님께는 소정의 참가비 <em>3만원</em>을 양해 부탁드립니다.</span>
@@ -298,10 +393,8 @@ export default function Home() {
           <div>오후 7:00 — 10:00</div>
           <div>삼성동 스파크플러스</div>
         </div>
-        <button
-          className="hero-cta"
-          onClick={() => document.getElementById('rsvp').scrollIntoView({ behavior: 'smooth' })}
-        >
+        <button className="hero-cta"
+          onClick={() => document.getElementById('rsvp').scrollIntoView({ behavior: 'smooth' })}>
           참석 여부 확인하기
         </button>
       </section>
@@ -329,23 +422,14 @@ export default function Home() {
         </div>
 
         <div className="attendee-tabs">
-          <button
-            className={`tab-btn ${tab === 'confirmed' ? 'active' : ''}`}
-            onClick={() => setTab('confirmed')}
-          >
+          <button className={`tab-btn ${tab === 'confirmed' ? 'active' : ''}`} onClick={() => setTab('confirmed')}>
             참석 확정 <span className="count-badge">{confirmedList.length}</span>
           </button>
-          <button
-            className={`tab-btn ${tab === 'waiting' ? 'active' : ''}`}
-            onClick={() => setTab('waiting')}
-          >
+          <button className={`tab-btn ${tab === 'waiting' ? 'active' : ''}`} onClick={() => setTab('waiting')}>
             참석 대기 <span className="count-badge">{waitingList.length}</span>
           </button>
           {newRsvps.length > 0 && (
-            <button
-              className={`tab-btn ${tab === 'new' ? 'active' : ''}`}
-              onClick={() => setTab('new')}
-            >
+            <button className={`tab-btn ${tab === 'new' ? 'active' : ''}`} onClick={() => setTab('new')}>
               신규 신청 <span className="count-badge">{newRsvps.length}</span>
             </button>
           )}
@@ -354,7 +438,7 @@ export default function Home() {
         {tab === 'confirmed' && (
           <div className="attendee-grid">
             {confirmedList.map((p) => (
-              <AttendeeCard key={p.id} person={p} avatarClass="avatar-blue" onEdit={setEditTarget} />
+              <AttendeeCard key={p.id} person={p} onEdit={setEditTarget} onDemote={handleDemote} />
             ))}
           </div>
         )}
@@ -368,7 +452,7 @@ export default function Home() {
         {tab === 'new' && (
           <div className="attendee-grid">
             {newRsvps.map((r) => (
-              <RsvpCard key={r.id} rsvp={r} />
+              <RsvpCard key={r.id} rsvp={r} onEdit={setRsvpEditTarget} />
             ))}
           </div>
         )}
@@ -383,86 +467,50 @@ export default function Home() {
             <div className="section-label">RSVP</div>
             <h2>참석 여부를 알려주세요</h2>
           </div>
-
           {!submitted ? (
             <form onSubmit={handleSubmit}>
               <div className="form-group">
                 <label className="form-label">이름 *</label>
-                <input
-                  type="text"
-                  className="form-input"
-                  value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  placeholder="홍길동"
-                  required
-                />
+                <input type="text" className="form-input" required value={form.name}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="홍길동" />
               </div>
               <div className="form-group">
                 <label className="form-label">소속 / 직책</label>
-                <input
-                  type="text"
-                  className="form-input"
-                  value={form.affiliation}
-                  onChange={(e) => setForm({ ...form, affiliation: e.target.value })}
-                  placeholder="회사명 · 직책"
-                />
+                <input type="text" className="form-input" value={form.affiliation}
+                  onChange={(e) => setForm({ ...form, affiliation: e.target.value })} placeholder="회사명 · 직책" />
               </div>
               <div className="form-group">
                 <label className="form-label">연락처 (전화번호 또는 이메일) *</label>
-                <input
-                  type="text"
-                  className="form-input"
-                  value={form.contact}
+                <input type="text" className="form-input" required value={form.contact}
                   onChange={(e) => setForm({ ...form, contact: e.target.value })}
-                  placeholder="010-0000-0000 또는 email@example.com"
-                  required
-                />
+                  placeholder="010-0000-0000 또는 email@example.com" />
               </div>
               <div className="form-group">
                 <label className="form-label">한 줄 자기소개</label>
-                <input
-                  type="text"
-                  className="form-input"
-                  value={form.intro}
+                <input type="text" className="form-input" value={form.intro}
                   onChange={(e) => setForm({ ...form, intro: e.target.value })}
-                  placeholder="현재 하는 일이나 관심사를 짧게 소개해 주세요"
-                />
+                  placeholder="현재 하는 일이나 관심사를 짧게 소개해 주세요" />
               </div>
               <div className="form-group">
                 <label className="form-label">참석 여부 *</label>
                 <div className="radio-group">
                   <label className={`radio-label ${form.attendance === 'yes' ? 'checked' : ''}`}>
-                    <input
-                      type="radio"
-                      name="attendance"
-                      value="yes"
-                      checked={form.attendance === 'yes'}
-                      onChange={() => setForm({ ...form, attendance: 'yes' })}
-                    />
-                    <span className="radio-indicator" />
-                    참석합니다
+                    <input type="radio" name="attendance" value="yes" checked={form.attendance === 'yes'}
+                      onChange={() => setForm({ ...form, attendance: 'yes' })} />
+                    <span className="radio-indicator" />참석합니다
                   </label>
                   <label className={`radio-label ${form.attendance === 'no' ? 'checked' : ''}`}>
-                    <input
-                      type="radio"
-                      name="attendance"
-                      value="no"
-                      checked={form.attendance === 'no'}
-                      onChange={() => setForm({ ...form, attendance: 'no' })}
-                    />
-                    <span className="radio-indicator" />
-                    불참합니다
+                    <input type="radio" name="attendance" value="no" checked={form.attendance === 'no'}
+                      onChange={() => setForm({ ...form, attendance: 'no' })} />
+                    <span className="radio-indicator" />불참합니다
                   </label>
                 </div>
               </div>
               <div className="form-group">
                 <label className="form-label">메시지 (선택)</label>
-                <textarea
-                  className="form-textarea"
-                  value={form.message}
+                <textarea className="form-textarea" value={form.message}
                   onChange={(e) => setForm({ ...form, message: e.target.value })}
-                  placeholder="간단한 인사나 전달사항을 남겨주세요"
-                />
+                  placeholder="간단한 인사나 전달사항을 남겨주세요" />
               </div>
               {error && <div className="form-error">{error}</div>}
               <button type="submit" className="submit-btn" disabled={submitting}>
@@ -472,16 +520,12 @@ export default function Home() {
           ) : (
             <div className="success-message">
               <div className="success-icon">✓</div>
-              <h3>
-                {form.attendance === 'yes'
-                  ? `${submittedName}님, 참석 확인이 완료되었습니다!`
-                  : `${submittedName}님, 응답해 주셔서 감사합니다`}
-              </h3>
-              <p>
-                {form.attendance === 'yes'
-                  ? '소중한 시간을 내어 주셔서 감사합니다.\n6월 2일 화요일 오후 7시, 삼성동 스파크플러스에서 뵙겠습니다.'
-                  : '아쉽지만 다음 모임에서 함께하길 기대합니다.\n언제든지 연락 주세요!'}
-              </p>
+              <h3>{form.attendance === 'yes'
+                ? `${submittedName}님, 참석 확인이 완료되었습니다!`
+                : `${submittedName}님, 응답해 주셔서 감사합니다`}</h3>
+              <p>{form.attendance === 'yes'
+                ? '소중한 시간을 내어 주셔서 감사합니다.\n6월 2일 화요일 오후 7시, 삼성동 스파크플러스에서 뵙겠습니다.'
+                : '아쉽지만 다음 모임에서 함께하길 기대합니다.\n언제든지 연락 주세요!'}</p>
             </div>
           )}
         </div>

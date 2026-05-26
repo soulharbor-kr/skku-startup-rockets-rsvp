@@ -503,6 +503,21 @@ footer {
 }
 
 /* --- WAITING CARD CONFIRM BUTTON --- */
+.card-demote-btn {
+  display: inline-block;
+  font-size: 10px;
+  padding: 3px 10px;
+  background: transparent;
+  border: 0.5px solid #4a4020;
+  color: #8a7040;
+  font-family: 'Noto Sans KR', sans-serif;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.card-demote-btn:hover { background: #2a2010; color: var(--gold); border-color: #6a5030; }
+
 .card-confirm-btn {
   display: inline-block;
   font-size: 10px;
