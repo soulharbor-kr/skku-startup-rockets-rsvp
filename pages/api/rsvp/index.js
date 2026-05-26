@@ -3,10 +3,10 @@ import { createClient } from '@supabase/supabase-js'
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end()
 
-  const { name, contact, affiliation, intro, attendance, message } = req.body
+  const { name, phone, email, affiliation, intro, attendance, message } = req.body
 
-  if (!name?.trim() || !contact?.trim()) {
-    return res.status(400).json({ error: '이름과 연락처는 필수입니다.' })
+  if (!name?.trim()) {
+    return res.status(400).json({ error: '이름은 필수입니다.' })
   }
   if (!['yes', 'no'].includes(attendance)) {
     return res.status(400).json({ error: '참석 여부를 선택해 주세요.' })
@@ -17,9 +17,11 @@ export default async function handler(req, res) {
     process.env.SUPABASE_SERVICE_ROLE_KEY
   )
 
+  const contact = [phone?.trim(), email?.trim()].filter(Boolean).join(' / ')
+
   const { data, error } = await supabase
     .from('rsvps')
-    .insert({ name: name.trim(), contact: contact.trim(), affiliation, intro, attendance, message })
+    .insert({ name: name.trim(), contact: contact || null, affiliation, intro, attendance, message })
     .select()
     .single()
 

@@ -296,7 +296,7 @@ export default function Home() {
   const [showAdmin,     setShowAdmin]     = useState(false)
 
   const [form, setForm] = useState({
-    name: '', contact: '', affiliation: '', intro: '', attendance: 'yes', message: '',
+    name: '', phone: '', email: '', affiliation: '', intro: '', attendance: 'yes', message: '',
   })
   const [submitted,     setSubmitted]     = useState(false)
   const [submitting,    setSubmitting]    = useState(false)
@@ -477,10 +477,16 @@ export default function Home() {
                   onChange={(e) => setForm({ ...form, affiliation: e.target.value })} placeholder="회사명 · 직책" />
               </div>
               <div className="form-group">
-                <label className="form-label">연락처 (전화번호 또는 이메일) *</label>
-                <input type="text" className="form-input" required value={form.contact}
-                  onChange={(e) => setForm({ ...form, contact: e.target.value })}
-                  placeholder="010-0000-0000 또는 email@example.com" />
+                <label className="form-label">전화번호</label>
+                <input type="tel" className="form-input" value={form.phone}
+                  onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                  placeholder="010-0000-0000" />
+              </div>
+              <div className="form-group">
+                <label className="form-label">이메일</label>
+                <input type="email" className="form-input" value={form.email}
+                  onChange={(e) => setForm({ ...form, email: e.target.value })}
+                  placeholder="email@example.com" />
               </div>
               <div className="form-group">
                 <label className="form-label">한 줄 자기소개</label>
