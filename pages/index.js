@@ -375,8 +375,8 @@ export default function Home() {
   return (
     <>
       <Head>
-        <title>스타트업 동문 모임 — RSVP</title>
-        <meta name="description" content="스타트업 동문 모임 | 2026년 6월 2일 삼성동 스파크플러스" />
+        <title>SKKU 스타트업 얼라이언스 모임 — RSVP</title>
+        <meta name="description" content="SKKU 스타트업 얼라이언스 모임 | 2026년 6월 2일 삼성동 스파크플러스" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
 
@@ -386,8 +386,8 @@ export default function Home() {
       {/* HERO */}
       <section className="hero">
         <div className="hero-line" />
-        <div className="hero-eyebrow">Startup Alumni Gathering · 2026</div>
-        <h1 className="hero-title">스타트업<br /><em>동문 모임</em></h1>
+        <div className="hero-eyebrow">SKKU Startup Alliance · 2026</div>
+        <h1 className="hero-title">SKKU 스타트업<br /><em>얼라이언스 모임</em></h1>
         <p className="hero-desc">
           격식 없이, 반가운 얼굴들끼리 편하게 모이는 자리입니다.<br />
           <span className="hero-notice">※ 05학번 이상 선배님께는 소정의 참가비 <em>3만원</em>을 양해 부탁드립니다.</span>
@@ -540,7 +540,7 @@ export default function Home() {
       </div>
 
       <footer>
-        문의 · 홍성완 (성균관대 창업지원단)&nbsp;&nbsp;|&nbsp;&nbsp;2026 스타트업 동문 모임
+        문의 · 홍성완 (성균관대 창업지원단)&nbsp;&nbsp;|&nbsp;&nbsp;2026 SKKU 스타트업 얼라이언스 모임
         <button className="admin-trigger" onClick={() => setShowAdmin(true)}>관리자</button>
       </footer>
     </>
