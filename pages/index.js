@@ -7,7 +7,7 @@ function maskPhone(phone) {
   return phone.replace(/(\d{3})-?(\d{3,4})-?(\d{4})/, '$1-****-$3')
 }
 
-/* ── 참석자 편집 모달 (attendees 테이블) ── */
+/* ── 참석자 편집 모달 ── */
 function EditModal({ attendee, onClose, onSave }) {
   const [form, setForm] = useState({
     phone: attendee.phone || '',
@@ -83,15 +83,15 @@ function EditModal({ attendee, onClose, onSave }) {
   )
 }
 
-/* ── 신규 RSVP 편집 모달 (rsvps 테이블) ── */
-function EditRsvpModal({ rsvp, onClose, onSave }) {
-  const [form, setForm] = useState({
-    contact:     rsvp.contact     || '',
-    affiliation: rsvp.affiliation || '',
-    intro:       rsvp.intro       || '',
-  })
-  const [saving, setSaving] = useState(false)
-  const [error,  setError]  = useState('')
+/* ── 관리자 패널 모달 ── */
+function AdminModal({ onClose, onApprove }) {
+  const [password,      setPassword]      = useState('')
+  const [unlocked,      setUnlocked]      = useState(false)
+  const [pending,       setPending]       = useState([])
+  const [authError,     setAuthError]     = useState('')
+  const [loading,       setLoading]       = useState(false)
+  const [actionId,      setActionId]      = useState(null)
+
   const handleClose = useCallback(() => onClose(), [onClose])
 
   useEffect(() => {
@@ -101,73 +101,127 @@ function EditRsvpModal({ rsvp, onClose, onSave }) {
     return () => { window.removeEventListener('keydown', onEsc); document.body.style.overflow = '' }
   }, [handleClose])
 
-  async function handleSave() {
-    setSaving(true); setError('')
+  async function handleLogin(e) {
+    e.preventDefault()
+    setLoading(true); setAuthError('')
     try {
-      const res  = await fetch(`/api/rsvp/${rsvp.id}`, {
-        method: 'PATCH',
+      const res  = await fetch('/api/admin/pending', {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ password }),
       })
       const data = await res.json()
-      if (res.ok) onSave(data)
-      else setError(data.error || '저장 중 오류가 발생했습니다.')
-    } catch { setError('네트워크 오류가 발생했습니다.') }
-    finally  { setSaving(false) }
+      if (res.ok) { setUnlocked(true); setPending(data) }
+      else setAuthError(data.error || '비밀번호가 틀렸습니다.')
+    } catch { setAuthError('네트워크 오류가 발생했습니다.') }
+    finally  { setLoading(false) }
+  }
+
+  async function handleApprove(rsvp) {
+    setActionId(rsvp.id)
+    try {
+      const res  = await fetch('/api/admin/approve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: rsvp.id, password }),
+      })
+      const data = await res.json()
+      if (res.ok) {
+        setPending((prev) => prev.filter((r) => r.id !== rsvp.id))
+        onApprove(data.attendee)
+      }
+    } catch {}
+    finally { setActionId(null) }
+  }
+
+  async function handleReject(rsvp) {
+    setActionId(rsvp.id)
+    try {
+      const res = await fetch('/api/admin/reject', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: rsvp.id, password }),
+      })
+      if (res.ok) setPending((prev) => prev.filter((r) => r.id !== rsvp.id))
+    } catch {}
+    finally { setActionId(null) }
   }
 
   return (
     <div className="modal-overlay" onClick={handleClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()}>
+      <div className="modal" style={{ maxWidth: 520 }} onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <div>
-            <div className="section-label">정보 수정</div>
-            <div className="modal-title">{rsvp.name}</div>
-            {rsvp.affiliation && <div className="modal-subtitle">{rsvp.affiliation}</div>}
+            <div className="section-label">Admin</div>
+            <div className="modal-title">관리자 패널</div>
           </div>
           <button className="modal-close" onClick={handleClose}>✕</button>
         </div>
-        <div className="modal-body">
-          <div className="form-group">
-            <label className="form-label">연락처</label>
-            <input type="text" className="form-input" value={form.contact}
-              onChange={(e) => setForm({ ...form, contact: e.target.value })}
-              placeholder="010-0000-0000 또는 email@example.com" />
+
+        {!unlocked ? (
+          <form onSubmit={handleLogin}>
+            <div className="modal-body">
+              <div className="form-group">
+                <label className="form-label">비밀번호</label>
+                <input type="password" className="form-input" value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="관리자 비밀번호 입력" autoFocus />
+              </div>
+              {authError && <div className="form-error">{authError}</div>}
+            </div>
+            <div className="modal-footer">
+              <button type="button" className="modal-btn-cancel" onClick={handleClose}>취소</button>
+              <button type="submit" className="modal-btn-save" disabled={loading || !password}>
+                {loading ? '확인 중...' : '확인'}
+              </button>
+            </div>
+          </form>
+        ) : (
+          <div className="modal-body">
+            {pending.length === 0 ? (
+              <div className="admin-empty">승인 대기 중인 신청이 없습니다.</div>
+            ) : (
+              <>
+                <div className="admin-count">승인 대기 {pending.length}건</div>
+                <div className="admin-pending-list">
+                  {pending.map((r) => (
+                    <div key={r.id} className="admin-rsvp-item">
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div className="admin-rsvp-name">{r.name}</div>
+                        {r.affiliation && <div className="admin-rsvp-sub">{r.affiliation}</div>}
+                        {r.intro       && <div className="admin-rsvp-intro">"{r.intro}"</div>}
+                        <div className="admin-rsvp-contact">{r.contact}</div>
+                        {r.message     && <div className="admin-rsvp-message">💬 {r.message}</div>}
+                      </div>
+                      <div className="admin-rsvp-actions">
+                        <button className="admin-approve-btn"
+                          onClick={() => handleApprove(r)} disabled={actionId === r.id}>
+                          {actionId === r.id ? '...' : '✓ 확정'}
+                        </button>
+                        <button className="admin-reject-btn"
+                          onClick={() => handleReject(r)} disabled={actionId === r.id}>
+                          ✕
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
-          <div className="form-group">
-            <label className="form-label">소속 / 직책</label>
-            <input type="text" className="form-input" value={form.affiliation}
-              onChange={(e) => setForm({ ...form, affiliation: e.target.value })}
-              placeholder="회사명 · 직책" />
-          </div>
-          <div className="form-group">
-            <label className="form-label">한 줄 자기소개</label>
-            <textarea className="form-textarea" rows={3} value={form.intro}
-              onChange={(e) => setForm({ ...form, intro: e.target.value })}
-              placeholder="현재 하는 일이나 관심사를 짧게 소개해 주세요" />
-          </div>
-          {error && <div className="form-error">{error}</div>}
-        </div>
-        <div className="modal-footer">
-          <button className="modal-btn-cancel" onClick={handleClose}>취소</button>
-          <button className="modal-btn-save" onClick={handleSave} disabled={saving}>
-            {saving ? '저장 중...' : '저장하기'}
-          </button>
-        </div>
+        )}
       </div>
     </div>
   )
 }
 
-/* ── 참석 확정 카드 (대기로 전환 가능) ── */
+/* ── 참석 확정 카드 ── */
 function AttendeeCard({ person, onEdit, onDemote }) {
   const [demoting, setDemoting] = useState(false)
   const [loading,  setLoading]  = useState(false)
 
   async function handleDemote() {
-    setLoading(true)
-    await onDemote(person)
-    setLoading(false); setDemoting(false)
+    setLoading(true); await onDemote(person); setLoading(false); setDemoting(false)
   }
 
   return (
@@ -182,18 +236,12 @@ function AttendeeCard({ person, onEdit, onDemote }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px', flexWrap: 'wrap' }}>
           <span className={`sector-tag st-${person.sector}`}>{person.tag}</span>
           {!demoting ? (
-            <button className="card-demote-btn" onClick={() => setDemoting(true)}>
-              → 대기로 전환
-            </button>
+            <button className="card-demote-btn" onClick={() => setDemoting(true)}>→ 대기로 전환</button>
           ) : (
             <div className="confirm-inline">
               <span className="confirm-question">대기로 전환?</span>
-              <button className="confirm-yes" onClick={handleDemote} disabled={loading}>
-                {loading ? '...' : '예'}
-              </button>
-              <button className="confirm-no" onClick={() => setDemoting(false)} disabled={loading}>
-                취소
-              </button>
+              <button className="confirm-yes" onClick={handleDemote} disabled={loading}>{loading ? '...' : '예'}</button>
+              <button className="confirm-no"  onClick={() => setDemoting(false)} disabled={loading}>취소</button>
             </div>
           )}
         </div>
@@ -203,15 +251,13 @@ function AttendeeCard({ person, onEdit, onDemote }) {
   )
 }
 
-/* ── 참석 대기 카드 (확정 전환 가능) ── */
+/* ── 참석 대기 카드 ── */
 function WaitingCard({ person, onEdit, onConfirm }) {
   const [confirming, setConfirming] = useState(false)
   const [loading,    setLoading]    = useState(false)
 
   async function handleConfirm() {
-    setLoading(true)
-    await onConfirm(person)
-    setLoading(false); setConfirming(false)
+    setLoading(true); await onConfirm(person); setLoading(false); setConfirming(false)
   }
 
   return (
@@ -226,18 +272,12 @@ function WaitingCard({ person, onEdit, onConfirm }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px', flexWrap: 'wrap' }}>
           <span className={`sector-tag st-${person.sector}`}>{person.tag}</span>
           {!confirming ? (
-            <button className="card-confirm-btn" onClick={() => setConfirming(true)}>
-              ✓ 참석 확정
-            </button>
+            <button className="card-confirm-btn" onClick={() => setConfirming(true)}>✓ 참석 확정</button>
           ) : (
             <div className="confirm-inline">
               <span className="confirm-question">확정하시겠어요?</span>
-              <button className="confirm-yes" onClick={handleConfirm} disabled={loading}>
-                {loading ? '...' : '예'}
-              </button>
-              <button className="confirm-no" onClick={() => setConfirming(false)} disabled={loading}>
-                취소
-              </button>
+              <button className="confirm-yes" onClick={handleConfirm} disabled={loading}>{loading ? '...' : '예'}</button>
+              <button className="confirm-no"  onClick={() => setConfirming(false)} disabled={loading}>취소</button>
             </div>
           )}
         </div>
@@ -247,38 +287,20 @@ function WaitingCard({ person, onEdit, onConfirm }) {
   )
 }
 
-/* ── 신규 RSVP 카드 ── */
-function RsvpCard({ rsvp, onEdit }) {
-  return (
-    <div className="attendee-card">
-      <div className="avatar avatar-new">{initials(rsvp.name)}</div>
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div className="attendee-name">{rsvp.name}</div>
-        {rsvp.affiliation && <div className="attendee-role">{rsvp.affiliation}</div>}
-        {rsvp.intro       && <div className="attendee-intro">{rsvp.intro}</div>}
-        <span className="sector-tag st-new">신규</span>
-      </div>
-      <button className="card-edit-btn" onClick={() => onEdit(rsvp)} title="정보 수정">✏️</button>
-    </div>
-  )
-}
-
 /* ── 메인 페이지 ── */
 export default function Home() {
   const [confirmedList, setConfirmedList] = useState([])
   const [waitingList,   setWaitingList]   = useState([])
-  const [newRsvps,      setNewRsvps]      = useState([])
   const [tab,           setTab]           = useState('confirmed')
-
-  const [editTarget,    setEditTarget]    = useState(null)  // attendees 편집
-  const [rsvpEditTarget, setRsvpEditTarget] = useState(null) // rsvps 편집
+  const [editTarget,    setEditTarget]    = useState(null)
+  const [showAdmin,     setShowAdmin]     = useState(false)
 
   const [form, setForm] = useState({
     name: '', contact: '', affiliation: '', intro: '', attendance: 'yes', message: '',
   })
-  const [submitted,    setSubmitted]    = useState(false)
-  const [submitting,   setSubmitting]   = useState(false)
-  const [error,        setError]        = useState('')
+  const [submitted,     setSubmitted]     = useState(false)
+  const [submitting,    setSubmitting]    = useState(false)
+  const [error,         setError]         = useState('')
   const [submittedName, setSubmittedName] = useState('')
 
   useEffect(() => {
@@ -289,27 +311,19 @@ export default function Home() {
         setConfirmedList(data.filter((a) => a.status === 'confirmed'))
         setWaitingList(data.filter((a) => a.status === 'waiting'))
       }).catch(() => {})
-
-    fetch('/api/attendees')
-      .then((r) => r.json())
-      .then((data) => Array.isArray(data) && setNewRsvps(data))
-      .catch(() => {})
   }, [])
 
-  /* attendees 편집 저장 */
   function handleEditSave(updated) {
     setConfirmedList((prev) => prev.map((a) => (a.id === updated.id ? updated : a)))
     setWaitingList((prev)   => prev.map((a) => (a.id === updated.id ? updated : a)))
     setEditTarget(null)
   }
 
-  /* rsvps 편집 저장 */
-  function handleRsvpEditSave(updated) {
-    setNewRsvps((prev) => prev.map((r) => (r.id === updated.id ? updated : r)))
-    setRsvpEditTarget(null)
+  function handleAdminApprove(attendee) {
+    setConfirmedList((prev) => [...prev, attendee])
+    setTab('confirmed')
   }
 
-  /* 대기 → 확정 */
   async function handleConfirm(person) {
     try {
       const res = await fetch(`/api/attendee/${person.id}`, {
@@ -326,7 +340,6 @@ export default function Home() {
     } catch {}
   }
 
-  /* 확정 → 대기 */
   async function handleDemote(person) {
     try {
       const res = await fetch(`/api/attendee/${person.id}`, {
@@ -343,7 +356,6 @@ export default function Home() {
     } catch {}
   }
 
-  /* RSVP 폼 제출 */
   async function handleSubmit(e) {
     e.preventDefault()
     setSubmitting(true); setError('')
@@ -354,19 +366,11 @@ export default function Home() {
         body: JSON.stringify(form),
       })
       const data = await res.json()
-      if (res.ok) {
-        setSubmittedName(form.name); setSubmitted(true)
-        if (form.attendance === 'yes' && data.rsvp) {
-          setNewRsvps((prev) => [data.rsvp, ...prev])
-        }
-      } else {
-        setError(data.error || '오류가 발생했습니다.')
-      }
+      if (res.ok) { setSubmittedName(form.name); setSubmitted(true) }
+      else setError(data.error || '오류가 발생했습니다.')
     } catch { setError('네트워크 오류가 발생했습니다.') }
     finally  { setSubmitting(false) }
   }
-
-  const totalExpected = confirmedList.length + newRsvps.length
 
   return (
     <>
@@ -376,8 +380,8 @@ export default function Home() {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
 
-      {editTarget     && <EditModal     attendee={editTarget}     onClose={() => setEditTarget(null)}     onSave={handleEditSave} />}
-      {rsvpEditTarget && <EditRsvpModal rsvp={rsvpEditTarget}     onClose={() => setRsvpEditTarget(null)} onSave={handleRsvpEditSave} />}
+      {editTarget  && <EditModal  attendee={editTarget} onClose={() => setEditTarget(null)} onSave={handleEditSave} />}
+      {showAdmin   && <AdminModal onClose={() => setShowAdmin(false)} onApprove={handleAdminApprove} />}
 
       {/* HERO */}
       <section className="hero">
@@ -416,7 +420,7 @@ export default function Home() {
             <div className="stat-label">참석 대기</div>
           </div>
           <div className="stat-item">
-            <div className="stat-num">{totalExpected}</div>
+            <div className="stat-num">{confirmedList.length + waitingList.length}</div>
             <div className="stat-label">총 예상 인원</div>
           </div>
         </div>
@@ -428,11 +432,6 @@ export default function Home() {
           <button className={`tab-btn ${tab === 'waiting' ? 'active' : ''}`} onClick={() => setTab('waiting')}>
             참석 대기 <span className="count-badge">{waitingList.length}</span>
           </button>
-          {newRsvps.length > 0 && (
-            <button className={`tab-btn ${tab === 'new' ? 'active' : ''}`} onClick={() => setTab('new')}>
-              신규 신청 <span className="count-badge">{newRsvps.length}</span>
-            </button>
-          )}
         </div>
 
         {tab === 'confirmed' && (
@@ -449,13 +448,6 @@ export default function Home() {
             ))}
           </div>
         )}
-        {tab === 'new' && (
-          <div className="attendee-grid">
-            {newRsvps.map((r) => (
-              <RsvpCard key={r.id} rsvp={r} onEdit={setRsvpEditTarget} />
-            ))}
-          </div>
-        )}
       </section>
 
       <div className="divider" />
@@ -464,9 +456,14 @@ export default function Home() {
       <div className="form-section" id="rsvp">
         <div className="form-card">
           <div className="form-header">
-            <div className="section-label">RSVP</div>
-            <h2>참석 여부를 알려주세요</h2>
+            <div className="section-label">신규 참석 신청</div>
+            <h2>아직 명단에 없으신가요?</h2>
+            <p className="form-header-desc">
+              위 명단에 이미 있으신 분은 카드의 ✏️ 버튼으로 정보를 수정해 주세요.<br />
+              신규 신청은 관리자 확인 후 참석 확정 명단에 등록됩니다.
+            </p>
           </div>
+
           {!submitted ? (
             <form onSubmit={handleSubmit}>
               <div className="form-group">
@@ -514,18 +511,23 @@ export default function Home() {
               </div>
               {error && <div className="form-error">{error}</div>}
               <button type="submit" className="submit-btn" disabled={submitting}>
-                {submitting ? '전송 중...' : '참석 의사 전달하기'}
+                {submitting ? '전송 중...' : '참석 신청하기'}
               </button>
             </form>
           ) : (
             <div className="success-message">
               <div className="success-icon">✓</div>
-              <h3>{form.attendance === 'yes'
-                ? `${submittedName}님, 참석 확인이 완료되었습니다!`
-                : `${submittedName}님, 응답해 주셔서 감사합니다`}</h3>
-              <p>{form.attendance === 'yes'
-                ? '소중한 시간을 내어 주셔서 감사합니다.\n6월 2일 화요일 오후 7시, 삼성동 스파크플러스에서 뵙겠습니다.'
-                : '아쉽지만 다음 모임에서 함께하길 기대합니다.\n언제든지 연락 주세요!'}</p>
+              {form.attendance === 'yes' ? (
+                <>
+                  <h3>{submittedName}님, 신청이 접수되었습니다!</h3>
+                  <p>{'관리자 확인 후 참석 확정 명단에 등록됩니다.\n잠시만 기다려 주세요.'}</p>
+                </>
+              ) : (
+                <>
+                  <h3>{submittedName}님, 응답해 주셔서 감사합니다</h3>
+                  <p>{'아쉽지만 다음 모임에서 함께하길 기대합니다.\n언제든지 연락 주세요!'}</p>
+                </>
+              )}
             </div>
           )}
         </div>
@@ -533,6 +535,7 @@ export default function Home() {
 
       <footer>
         문의 · 홍성완 (성균관대 창업지원단)&nbsp;&nbsp;|&nbsp;&nbsp;2026 스타트업 동문 모임
+        <button className="admin-trigger" onClick={() => setShowAdmin(true)}>관리자</button>
       </footer>
     </>
   )
