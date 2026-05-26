@@ -1,50 +1,125 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Head from 'next/head'
-
-const CONFIRMED = [
-  { name: '홍성완', role: '성균관대 창업지원단 수석', sector: 'univ',    tag: '대학' },
-  { name: '승영욱', role: '포스페이스랩 대표',       sector: 'startup', tag: '스타트업' },
-  { name: '민무홍', role: '성균관대 컴퓨터교육학과 교수', sector: 'univ', tag: '대학' },
-  { name: '홍성후', role: '국립암센터 대외협력팀장',  sector: 'public',  tag: '공공' },
-  { name: '천영록', role: '모트에이아이 대표',        sector: 'startup', tag: '스타트업' },
-  { name: '노건준', role: '성균관대 인공지능학과 학생', sector: 'univ',   tag: '대학' },
-  { name: '이현웅', role: 'YTN 앵커',               sector: 'media',   tag: '미디어' },
-  { name: '박동찬', role: '파일러 CTO',              sector: 'startup', tag: '스타트업' },
-  { name: '김영현', role: '국OO 전무',               sector: 'public',  tag: '공공' },
-  { name: '함창욱', role: '신용보증기금 팀장',         sector: 'finance', tag: '금융' },
-  { name: '박재훈', role: '국민은행 팀장',            sector: 'finance', tag: '금융' },
-  { name: '김정년', role: 'CYP 본부장',              sector: 'invest',  tag: '투자' },
-  { name: '문예슬', role: '피클스 대표 / 성형외과 원장', sector: 'startup', tag: '스타트업' },
-]
-
-const WAITING = [
-  { name: '홍민우', role: '카카오뱅크 팀장',           sector: 'finance', tag: '금융' },
-  { name: '김진성', role: '대륙아주법인 연구원',         sector: 'public',  tag: '전문직' },
-  { name: '송락현', role: '한국물류데이터 대표',         sector: 'startup', tag: '스타트업' },
-  { name: '이강훈', role: '도우물류 대표',              sector: 'startup', tag: '스타트업' },
-  { name: '이흥규', role: '라이폴리 대표',              sector: 'startup', tag: '스타트업' },
-  { name: '박준호', role: '비엑스컨설팅 대표',           sector: 'startup', tag: '스타트업' },
-  { name: '조유진', role: '스마일게이트 인베스트먼트 팀장', sector: 'invest',  tag: '투자' },
-  { name: '문희',   role: '한국투액셀러레이터 팀장',      sector: 'invest',  tag: '투자' },
-  { name: '승주완', role: '성균관대 책임',              sector: 'univ',    tag: '대학' },
-  { name: '김준석', role: '더파운더스(아누아) 본부장',    sector: 'startup', tag: '스타트업' },
-  { name: '김세연', role: '블루버스인베스트먼트 대표',     sector: 'invest',  tag: '투자' },
-  { name: '이희종', role: '메디치인베스트먼트 이사',       sector: 'invest',  tag: '투자' },
-]
 
 function initials(name) {
   return name.slice(0, 2)
 }
 
-function AttendeeCard({ person, avatarClass }) {
+function maskPhone(phone) {
+  return phone.replace(/(\d{3})-?(\d{3,4})-?(\d{4})/, '$1-****-$3')
+}
+
+function EditModal({ attendee, onClose, onSave }) {
+  const [form, setForm] = useState({
+    phone: attendee.phone || '',
+    email: attendee.email || '',
+    intro: attendee.intro || '',
+  })
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
+
+  const handleClose = useCallback(() => onClose(), [onClose])
+
+  useEffect(() => {
+    const onEsc = (e) => { if (e.key === 'Escape') handleClose() }
+    window.addEventListener('keydown', onEsc)
+    document.body.style.overflow = 'hidden'
+    return () => {
+      window.removeEventListener('keydown', onEsc)
+      document.body.style.overflow = ''
+    }
+  }, [handleClose])
+
+  async function handleSave() {
+    setSaving(true)
+    setError('')
+    try {
+      const res = await fetch(`/api/attendee/${attendee.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      })
+      const data = await res.json()
+      if (res.ok) {
+        onSave(data)
+      } else {
+        setError(data.error || '저장 중 오류가 발생했습니다.')
+      }
+    } catch {
+      setError('네트워크 오류가 발생했습니다.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="modal-overlay" onClick={handleClose}>
+      <div className="modal" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-header">
+          <div>
+            <div className="section-label">정보 수정</div>
+            <div className="modal-title">{attendee.name}</div>
+            <div className="modal-subtitle">{attendee.role}</div>
+          </div>
+          <button className="modal-close" onClick={handleClose}>✕</button>
+        </div>
+        <div className="modal-body">
+          <div className="form-group">
+            <label className="form-label">전화번호</label>
+            <input
+              type="text"
+              className="form-input"
+              value={form.phone}
+              onChange={(e) => setForm({ ...form, phone: e.target.value })}
+              placeholder="010-0000-0000"
+            />
+          </div>
+          <div className="form-group">
+            <label className="form-label">이메일</label>
+            <input
+              type="email"
+              className="form-input"
+              value={form.email}
+              onChange={(e) => setForm({ ...form, email: e.target.value })}
+              placeholder="email@example.com"
+            />
+          </div>
+          <div className="form-group">
+            <label className="form-label">한 줄 자기소개</label>
+            <textarea
+              className="form-textarea"
+              value={form.intro}
+              onChange={(e) => setForm({ ...form, intro: e.target.value })}
+              placeholder="현재 하는 일이나 관심사를 짧게 소개해 주세요"
+              rows={3}
+            />
+          </div>
+          {error && <div className="form-error">{error}</div>}
+        </div>
+        <div className="modal-footer">
+          <button className="modal-btn-cancel" onClick={handleClose}>취소</button>
+          <button className="modal-btn-save" onClick={handleSave} disabled={saving}>
+            {saving ? '저장 중...' : '저장하기'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function AttendeeCard({ person, avatarClass, onEdit }) {
   return (
     <div className="attendee-card">
       <div className={`avatar ${avatarClass}`}>{initials(person.name)}</div>
-      <div>
+      <div style={{ flex: 1, minWidth: 0 }}>
         <div className="attendee-name">{person.name}</div>
         <div className="attendee-role">{person.role}</div>
+        {person.intro && <div className="attendee-intro">{person.intro}</div>}
+        {person.phone && <div className="attendee-contact">📞 {maskPhone(person.phone)}</div>}
+        {person.email && <div className="attendee-contact">✉️ {person.email}</div>}
         <span className={`sector-tag st-${person.sector}`}>{person.tag}</span>
       </div>
+      <button className="card-edit-btn" onClick={() => onEdit(person)} title="정보 수정">✏️</button>
     </div>
   )
 }
@@ -64,22 +139,41 @@ function RsvpCard({ rsvp }) {
 }
 
 export default function Home() {
-  const [tab, setTab] = useState('confirmed')
-  const [rsvps, setRsvps] = useState([])
+  const [confirmedList, setConfirmedList] = useState([])
+  const [waitingList, setWaitingList]     = useState([])
+  const [newRsvps, setNewRsvps]           = useState([])
+  const [tab, setTab]                     = useState('confirmed')
+  const [editTarget, setEditTarget]       = useState(null)
+
   const [form, setForm] = useState({
     name: '', contact: '', affiliation: '', intro: '', attendance: 'yes', message: '',
   })
-  const [submitted, setSubmitted] = useState(false)
-  const [submitting, setSubmitting] = useState(false)
-  const [error, setError] = useState('')
+  const [submitted, setSubmitted]     = useState(false)
+  const [submitting, setSubmitting]   = useState(false)
+  const [error, setError]             = useState('')
   const [submittedName, setSubmittedName] = useState('')
 
   useEffect(() => {
+    fetch('/api/attendees-list')
+      .then((r) => r.json())
+      .then((data) => {
+        if (!Array.isArray(data)) return
+        setConfirmedList(data.filter((a) => a.status === 'confirmed'))
+        setWaitingList(data.filter((a) => a.status === 'waiting'))
+      })
+      .catch(() => {})
+
     fetch('/api/attendees')
-      .then(r => r.json())
-      .then(data => Array.isArray(data) && setRsvps(data))
+      .then((r) => r.json())
+      .then((data) => Array.isArray(data) && setNewRsvps(data))
       .catch(() => {})
   }, [])
+
+  function handleEditSave(updated) {
+    setConfirmedList((prev) => prev.map((a) => (a.id === updated.id ? updated : a)))
+    setWaitingList((prev)   => prev.map((a) => (a.id === updated.id ? updated : a)))
+    setEditTarget(null)
+  }
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -96,7 +190,7 @@ export default function Home() {
         setSubmittedName(form.name)
         setSubmitted(true)
         if (form.attendance === 'yes' && data.rsvp) {
-          setRsvps(prev => [data.rsvp, ...prev])
+          setNewRsvps((prev) => [data.rsvp, ...prev])
         }
       } else {
         setError(data.error || '오류가 발생했습니다.')
@@ -108,7 +202,7 @@ export default function Home() {
     }
   }
 
-  const totalExpected = CONFIRMED.length + rsvps.length
+  const totalExpected = confirmedList.length + newRsvps.length
 
   return (
     <>
@@ -117,6 +211,14 @@ export default function Home() {
         <meta name="description" content="스타트업 동문 모임 | 2026년 6월 2일 삼성동 스파크플러스" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
+
+      {editTarget && (
+        <EditModal
+          attendee={editTarget}
+          onClose={() => setEditTarget(null)}
+          onSave={handleEditSave}
+        />
+      )}
 
       {/* HERO */}
       <section className="hero">
@@ -151,11 +253,11 @@ export default function Home() {
 
         <div className="stats-bar">
           <div className="stat-item">
-            <div className="stat-num">{CONFIRMED.length}</div>
+            <div className="stat-num">{confirmedList.length}</div>
             <div className="stat-label">참석 확정</div>
           </div>
           <div className="stat-item">
-            <div className="stat-num">{WAITING.length}</div>
+            <div className="stat-num">{waitingList.length}</div>
             <div className="stat-label">참석 대기</div>
           </div>
           <div className="stat-item">
@@ -169,41 +271,41 @@ export default function Home() {
             className={`tab-btn ${tab === 'confirmed' ? 'active' : ''}`}
             onClick={() => setTab('confirmed')}
           >
-            참석 확정 <span className="count-badge">{CONFIRMED.length}</span>
+            참석 확정 <span className="count-badge">{confirmedList.length}</span>
           </button>
           <button
             className={`tab-btn ${tab === 'waiting' ? 'active' : ''}`}
             onClick={() => setTab('waiting')}
           >
-            참석 대기 <span className="count-badge">{WAITING.length}</span>
+            참석 대기 <span className="count-badge">{waitingList.length}</span>
           </button>
-          {rsvps.length > 0 && (
+          {newRsvps.length > 0 && (
             <button
               className={`tab-btn ${tab === 'new' ? 'active' : ''}`}
               onClick={() => setTab('new')}
             >
-              신규 신청 <span className="count-badge">{rsvps.length}</span>
+              신규 신청 <span className="count-badge">{newRsvps.length}</span>
             </button>
           )}
         </div>
 
         {tab === 'confirmed' && (
           <div className="attendee-grid">
-            {CONFIRMED.map(p => (
-              <AttendeeCard key={p.name} person={p} avatarClass="avatar-blue" />
+            {confirmedList.map((p) => (
+              <AttendeeCard key={p.id} person={p} avatarClass="avatar-blue" onEdit={setEditTarget} />
             ))}
           </div>
         )}
         {tab === 'waiting' && (
           <div className="attendee-grid">
-            {WAITING.map(p => (
-              <AttendeeCard key={p.name} person={p} avatarClass="avatar-gold" />
+            {waitingList.map((p) => (
+              <AttendeeCard key={p.id} person={p} avatarClass="avatar-gold" onEdit={setEditTarget} />
             ))}
           </div>
         )}
         {tab === 'new' && (
           <div className="attendee-grid">
-            {rsvps.map(r => (
+            {newRsvps.map((r) => (
               <RsvpCard key={r.id} rsvp={r} />
             ))}
           </div>
@@ -228,46 +330,42 @@ export default function Home() {
                   type="text"
                   className="form-input"
                   value={form.name}
-                  onChange={e => setForm({ ...form, name: e.target.value })}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
                   placeholder="홍길동"
                   required
                 />
               </div>
-
               <div className="form-group">
                 <label className="form-label">소속 / 직책</label>
                 <input
                   type="text"
                   className="form-input"
                   value={form.affiliation}
-                  onChange={e => setForm({ ...form, affiliation: e.target.value })}
+                  onChange={(e) => setForm({ ...form, affiliation: e.target.value })}
                   placeholder="회사명 · 직책"
                 />
               </div>
-
               <div className="form-group">
                 <label className="form-label">연락처 (전화번호 또는 이메일) *</label>
                 <input
                   type="text"
                   className="form-input"
                   value={form.contact}
-                  onChange={e => setForm({ ...form, contact: e.target.value })}
+                  onChange={(e) => setForm({ ...form, contact: e.target.value })}
                   placeholder="010-0000-0000 또는 email@example.com"
                   required
                 />
               </div>
-
               <div className="form-group">
                 <label className="form-label">한 줄 자기소개</label>
                 <input
                   type="text"
                   className="form-input"
                   value={form.intro}
-                  onChange={e => setForm({ ...form, intro: e.target.value })}
+                  onChange={(e) => setForm({ ...form, intro: e.target.value })}
                   placeholder="현재 하는 일이나 관심사를 짧게 소개해 주세요"
                 />
               </div>
-
               <div className="form-group">
                 <label className="form-label">참석 여부 *</label>
                 <div className="radio-group">
@@ -295,19 +393,16 @@ export default function Home() {
                   </label>
                 </div>
               </div>
-
               <div className="form-group">
                 <label className="form-label">메시지 (선택)</label>
                 <textarea
                   className="form-textarea"
                   value={form.message}
-                  onChange={e => setForm({ ...form, message: e.target.value })}
+                  onChange={(e) => setForm({ ...form, message: e.target.value })}
                   placeholder="간단한 인사나 전달사항을 남겨주세요"
                 />
               </div>
-
               {error && <div className="form-error">{error}</div>}
-
               <button type="submit" className="submit-btn" disabled={submitting}>
                 {submitting ? '전송 중...' : '참석 의사 전달하기'}
               </button>

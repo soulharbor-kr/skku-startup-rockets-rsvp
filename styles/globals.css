@@ -479,6 +479,136 @@ footer {
   letter-spacing: 0.1em;
 }
 
+/* --- CARD EDIT BUTTON --- */
+.card-edit-btn {
+  background: none;
+  border: none;
+  color: #3a3a38;
+  font-size: 12px;
+  cursor: pointer;
+  padding: 2px 4px;
+  transition: color 0.2s;
+  flex-shrink: 0;
+  align-self: flex-start;
+  margin-left: auto;
+}
+
+.card-edit-btn:hover { color: var(--gold); }
+
+.attendee-contact {
+  font-size: 11px;
+  color: #555;
+  margin-top: 3px;
+  letter-spacing: 0.02em;
+}
+
+/* --- MODAL --- */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+  animation: fadeIn 0.15s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.modal {
+  background: var(--surface);
+  border: 0.5px solid #3a3a38;
+  width: 100%;
+  max-width: 460px;
+  animation: slideUp 0.2s ease;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(16px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+.modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 1.5rem 1.75rem 1rem;
+  border-bottom: 0.5px solid #2a2a28;
+}
+
+.modal-title {
+  font-family: 'Noto Serif KR', serif;
+  font-size: 1.25rem;
+  font-weight: 300;
+  color: var(--white);
+  margin-top: 0.25rem;
+}
+
+.modal-subtitle {
+  font-size: 12px;
+  color: var(--gray);
+  margin-top: 2px;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  color: var(--gray);
+  font-size: 16px;
+  cursor: pointer;
+  padding: 2px 6px;
+  transition: color 0.2s;
+  line-height: 1;
+}
+
+.modal-close:hover { color: var(--white); }
+
+.modal-body { padding: 1.5rem 1.75rem 1rem; }
+
+.modal-footer {
+  display: flex;
+  gap: 10px;
+  padding: 0 1.75rem 1.75rem;
+}
+
+.modal-btn-cancel {
+  flex: 1;
+  padding: 12px;
+  background: transparent;
+  border: 0.5px solid #444;
+  color: var(--gray);
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 13px;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.modal-btn-cancel:hover { border-color: #666; color: var(--white); }
+
+.modal-btn-save {
+  flex: 2;
+  padding: 12px;
+  background: transparent;
+  border: 0.5px solid var(--gold);
+  color: var(--gold);
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 13px;
+  letter-spacing: 0.15em;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.modal-btn-save:hover { background: var(--gold); color: var(--black); }
+.modal-btn-save:disabled { opacity: 0.4; cursor: not-allowed; }
+
 /* mobile */
 @media (max-width: 600px) {
   .form-card { padding: 2rem 1.5rem; }
