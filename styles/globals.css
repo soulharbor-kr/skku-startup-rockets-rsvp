@@ -502,6 +502,63 @@ footer {
   letter-spacing: 0.02em;
 }
 
+/* --- WAITING CARD CONFIRM BUTTON --- */
+.card-confirm-btn {
+  display: inline-block;
+  font-size: 10px;
+  padding: 3px 10px;
+  background: transparent;
+  border: 0.5px solid #3d6b3d;
+  color: #5dc49b;
+  font-family: 'Noto Sans KR', sans-serif;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.card-confirm-btn:hover { background: #1e2e1e; }
+
+.confirm-inline {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.confirm-question {
+  font-size: 10px;
+  color: #777;
+  letter-spacing: 0.05em;
+}
+
+.confirm-yes {
+  font-size: 10px;
+  padding: 3px 10px;
+  background: transparent;
+  border: 0.5px solid #5dc49b;
+  color: #5dc49b;
+  font-family: 'Noto Sans KR', sans-serif;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.confirm-yes:hover    { background: #1e2e1e; }
+.confirm-yes:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.confirm-no {
+  font-size: 10px;
+  padding: 3px 8px;
+  background: transparent;
+  border: 0.5px solid #444;
+  color: #666;
+  font-family: 'Noto Sans KR', sans-serif;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.confirm-no:hover    { border-color: #666; color: #999; }
+.confirm-no:disabled { opacity: 0.5; }
+
 /* --- MODAL --- */
 .modal-overlay {
   position: fixed;

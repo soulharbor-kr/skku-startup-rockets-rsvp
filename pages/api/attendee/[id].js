@@ -4,7 +4,19 @@ export default async function handler(req, res) {
   if (req.method !== 'PATCH') return res.status(405).end()
 
   const { id } = req.query
-  const { phone, email, intro } = req.body
+  const { phone, email, intro, status } = req.body
+
+  const updates = {}
+  if (phone  !== undefined) updates.phone  = phone  || null
+  if (email  !== undefined) updates.email  = email  || null
+  if (intro  !== undefined) updates.intro  = intro  || null
+  if (status !== undefined && ['confirmed', 'waiting'].includes(status)) {
+    updates.status = status
+  }
+
+  if (Object.keys(updates).length === 0) {
+    return res.status(400).json({ error: '업데이트할 내용이 없습니다.' })
+  }
 
   const supabase = createClient(
     process.env.SUPABASE_URL,
@@ -13,7 +25,7 @@ export default async function handler(req, res) {
 
   const { data, error } = await supabase
     .from('attendees')
-    .update({ phone: phone || null, email: email || null, intro: intro || null })
+    .update(updates)
     .eq('id', id)
     .select()
     .single()

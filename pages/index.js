@@ -124,6 +124,50 @@ function AttendeeCard({ person, avatarClass, onEdit }) {
   )
 }
 
+function WaitingCard({ person, onEdit, onConfirm }) {
+  const [confirming, setConfirming] = useState(false)
+  const [loading, setLoading]       = useState(false)
+
+  async function handleConfirm() {
+    setLoading(true)
+    await onConfirm(person)
+    setLoading(false)
+    setConfirming(false)
+  }
+
+  return (
+    <div className="attendee-card">
+      <div className="avatar avatar-gold">{initials(person.name)}</div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div className="attendee-name">{person.name}</div>
+        <div className="attendee-role">{person.role}</div>
+        {person.intro  && <div className="attendee-intro">{person.intro}</div>}
+        {person.phone  && <div className="attendee-contact">📞 {maskPhone(person.phone)}</div>}
+        {person.email  && <div className="attendee-contact">✉️ {person.email}</div>}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px', flexWrap: 'wrap' }}>
+          <span className={`sector-tag st-${person.sector}`}>{person.tag}</span>
+          {!confirming ? (
+            <button className="card-confirm-btn" onClick={() => setConfirming(true)}>
+              ✓ 참석 확정
+            </button>
+          ) : (
+            <div className="confirm-inline">
+              <span className="confirm-question">확정하시겠어요?</span>
+              <button className="confirm-yes" onClick={handleConfirm} disabled={loading}>
+                {loading ? '...' : '예'}
+              </button>
+              <button className="confirm-no" onClick={() => setConfirming(false)} disabled={loading}>
+                취소
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+      <button className="card-edit-btn" onClick={() => onEdit(person)} title="정보 수정">✏️</button>
+    </div>
+  )
+}
+
 function RsvpCard({ rsvp }) {
   return (
     <div className="attendee-card">
@@ -173,6 +217,24 @@ export default function Home() {
     setConfirmedList((prev) => prev.map((a) => (a.id === updated.id ? updated : a)))
     setWaitingList((prev)   => prev.map((a) => (a.id === updated.id ? updated : a)))
     setEditTarget(null)
+  }
+
+  async function handleConfirm(person) {
+    try {
+      const res = await fetch(`/api/attendee/${person.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'confirmed' }),
+      })
+      if (res.ok) {
+        const updated = await res.json()
+        setWaitingList((prev) => prev.filter((a) => a.id !== updated.id))
+        setConfirmedList((prev) => [...prev, updated])
+        setTab('confirmed')
+      }
+    } catch {
+      // 실패 시 카드 상태는 그대로 유지됨
+    }
   }
 
   async function handleSubmit(e) {
@@ -299,7 +361,7 @@ export default function Home() {
         {tab === 'waiting' && (
           <div className="attendee-grid">
             {waitingList.map((p) => (
-              <AttendeeCard key={p.id} person={p} avatarClass="avatar-gold" onEdit={setEditTarget} />
+              <WaitingCard key={p.id} person={p} onEdit={setEditTarget} onConfirm={handleConfirm} />
             ))}
           </div>
         )}
