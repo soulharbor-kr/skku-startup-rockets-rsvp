@@ -376,7 +376,7 @@ export default function Home() {
     <>
       <Head>
         <title>SKKU 스타트업 얼라이언스 모임 — RSVP</title>
-        <meta name="description" content="SKKU 스타트업 얼라이언스 모임 | 2026년 6월 2일 삼성동 스파크플러스" />
+        <meta name="description" content="SKKU 스타트업 얼라이언스 모임 | 2026년 6월 2일 강남구 테헤란로 217 오렌지플래닛 4층" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
 
@@ -395,7 +395,15 @@ export default function Home() {
         <div className="hero-meta">
           <div><strong>2026년 6월 2일 (화)</strong></div>
           <div>오후 7:00 — 10:00</div>
-          <div>삼성동 스파크플러스</div>
+          <div>
+            <a href="https://naver.me/FqWtGAEK" target="_blank" rel="noopener noreferrer"
+              style={{ color: 'inherit', textDecoration: 'underline', textUnderlineOffset: '3px' }}>
+              강남구 테헤란로 217, 오렌지플래닛 4층
+            </a>
+          </div>
+          <div style={{ fontSize: '0.82em', opacity: 0.6, marginTop: '2px' }}>
+            주차 1시간 지원 · 옆 센터필드가 더 저렴합니다
+          </div>
         </div>
         <button className="hero-cta"
           onClick={() => document.getElementById('rsvp').scrollIntoView({ behavior: 'smooth' })}>
