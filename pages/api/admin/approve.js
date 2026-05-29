@@ -27,6 +27,11 @@ export default async function handler(req, res) {
 
   await supabase.from('rsvps').update({ approved: true }).eq('id', id)
 
+  // contact 필드는 "전화 / 이메일" 형태로 저장됨
+  const parts = (rsvp.contact || '').split(' / ').map((s) => s.trim()).filter(Boolean)
+  const phone = parts.find((s) => /^[\d\-+\s]+$/.test(s)) || null
+  const email = parts.find((s) => s.includes('@')) || null
+
   const { data: attendee, error: insertError } = await supabase
     .from('attendees')
     .insert({
@@ -36,6 +41,8 @@ export default async function handler(req, res) {
       tag:    '신규',
       status: 'confirmed',
       intro:  rsvp.intro || null,
+      phone,
+      email,
     })
     .select()
     .single()
