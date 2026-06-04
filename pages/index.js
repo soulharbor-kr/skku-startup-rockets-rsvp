@@ -215,6 +215,80 @@ function AdminModal({ onClose, onApprove }) {
   )
 }
 
+/* ── 갤러리 ── */
+const GALLERY_IMAGES = [
+  'KakaoTalk_20260604_164735528.jpg',
+  'KakaoTalk_20260604_164735528_01.jpg',
+  'KakaoTalk_20260604_164735528_02.jpg',
+  'KakaoTalk_20260604_164735528_03.jpg',
+  'KakaoTalk_20260604_164739963.jpg',
+  'KakaoTalk_20260604_164739963_01.jpg',
+  'KakaoTalk_20260604_164739963_02.jpg',
+  'KakaoTalk_20260604_164739963_03.jpg',
+  'KakaoTalk_20260605_062034663.jpg',
+  'KakaoTalk_20260605_062034663_01.jpg',
+  'KakaoTalk_20260605_062034663_02.jpg',
+  'KakaoTalk_20260605_062034663_03.jpg',
+  'KakaoTalk_20260605_062034663_04.jpg',
+  'KakaoTalk_20260605_062034663_05.jpg',
+  'KakaoTalk_20260605_062034663_06.jpg',
+  'KakaoTalk_20260605_062034663_07.jpg',
+  'KakaoTalk_20260605_062034663_08.jpg',
+  'KakaoTalk_20260605_062034663_09.jpg',
+  'KakaoTalk_20260605_062034663_10.jpg',
+]
+const GALLERY_BASE = '/gallery/1st-20260602/'
+
+function GallerySection() {
+  const [lightbox, setLightbox] = useState(null)
+
+  useEffect(() => {
+    if (lightbox === null) return
+    const onKey = (e) => {
+      if (e.key === 'Escape')      setLightbox(null)
+      if (e.key === 'ArrowRight')  setLightbox((p) => Math.min(p + 1, GALLERY_IMAGES.length - 1))
+      if (e.key === 'ArrowLeft')   setLightbox((p) => Math.max(p - 1, 0))
+    }
+    window.addEventListener('keydown', onKey)
+    document.body.style.overflow = 'hidden'
+    return () => { window.removeEventListener('keydown', onKey); document.body.style.overflow = '' }
+  }, [lightbox])
+
+  return (
+    <section className="section">
+      <div className="section-label">Gallery</div>
+      <div className="section-title">1차 모임 사진 · 2026.06.02</div>
+
+      <div className="gallery-grid">
+        {GALLERY_IMAGES.map((f, i) => (
+          <button key={f} className="gallery-thumb" onClick={() => setLightbox(i)}>
+            <img src={GALLERY_BASE + f} alt={`모임 사진 ${i + 1}`} loading="lazy" />
+          </button>
+        ))}
+      </div>
+
+      {lightbox !== null && (
+        <div className="gallery-lightbox" onClick={() => setLightbox(null)}>
+          <button className="gallery-lb-close" onClick={() => setLightbox(null)}>✕</button>
+          <img
+            src={GALLERY_BASE + GALLERY_IMAGES[lightbox]}
+            alt={`모임 사진 ${lightbox + 1}`}
+            className="gallery-lb-media"
+            onClick={(e) => e.stopPropagation()}
+          />
+          {lightbox > 0 && (
+            <button className="gallery-lb-prev" onClick={(e) => { e.stopPropagation(); setLightbox(lightbox - 1) }}>‹</button>
+          )}
+          {lightbox < GALLERY_IMAGES.length - 1 && (
+            <button className="gallery-lb-next" onClick={(e) => { e.stopPropagation(); setLightbox(lightbox + 1) }}>›</button>
+          )}
+          <div className="gallery-lb-counter">{lightbox + 1} / {GALLERY_IMAGES.length}</div>
+        </div>
+      )}
+    </section>
+  )
+}
+
 /* ── 참석 확정 카드 ── */
 function AttendeeCard({ person, onEdit, onDemote }) {
   const [demoting, setDemoting] = useState(false)
@@ -457,6 +531,11 @@ export default function Home() {
           </div>
         )}
       </section>
+
+      <div className="divider" />
+
+      {/* GALLERY */}
+      <GallerySection />
 
       <div className="divider" />
 
