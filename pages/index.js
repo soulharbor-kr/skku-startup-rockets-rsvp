@@ -450,7 +450,7 @@ export default function Home() {
     <>
       <Head>
         <title>SKKU 스타트업 얼라이언스 모임 — RSVP</title>
-        <meta name="description" content="SKKU 스타트업 얼라이언스 모임 | 2026년 6월 2일 강남구 테헤란로 217 오렌지플래닛 4층" />
+        <meta name="description" content="제2회 SKKU 스타트업 얼라이언스 모임 | 2026년 8월 27일 강남구 테헤란로 217 오렌지플래닛 4층" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
 
@@ -460,15 +460,15 @@ export default function Home() {
       {/* HERO */}
       <section className="hero">
         <div className="hero-line" />
-        <div className="hero-eyebrow">SKKU Startup Alliance · 2026</div>
+        <div className="hero-eyebrow">제2회 · SKKU Startup Alliance · 2026</div>
         <h1 className="hero-title">SKKU 스타트업<br /><em>얼라이언스 모임</em></h1>
         <p className="hero-desc">
           격식 없이, 반가운 얼굴들끼리 편하게 모이는 자리입니다.<br />
           <span className="hero-notice">※ 05학번 이상 선배님께는 소정의 참가비 <em>3만원</em>을 양해 부탁드립니다.</span>
         </p>
         <div className="hero-meta">
-          <div><strong>2026년 6월 2일 (화)</strong></div>
-          <div>오후 7:00 — 10:00</div>
+          <div><strong>2026년 8월 27일 (목)</strong></div>
+          <div>저녁 7:00</div>
           <div>
             <a href="https://naver.me/FqWtGAEK" target="_blank" rel="noopener noreferrer"
               style={{ color: 'inherit', textDecoration: 'underline', textUnderlineOffset: '3px' }}>
