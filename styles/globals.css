@@ -699,6 +699,20 @@ footer {
 
 .admin-trigger:hover { color: #555; }
 
+.card-doc-btn {
+  display: inline-block;
+  margin-top: 6px;
+  padding: 3px 10px;
+  font-size: 11px;
+  color: var(--gold);
+  border: 1px solid var(--gold);
+  border-radius: 4px;
+  text-decoration: none;
+  opacity: 0.85;
+  transition: opacity 0.15s, background 0.15s;
+}
+.card-doc-btn:hover { opacity: 1; background: rgba(200,169,110,0.1); }
+
 /* --- GALLERY --- */
 .gallery-grid {
   display: grid;

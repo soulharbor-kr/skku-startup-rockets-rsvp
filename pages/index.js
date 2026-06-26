@@ -307,6 +307,9 @@ function AttendeeCard({ person, onEdit, onDemote }) {
         {person.intro && <div className="attendee-intro">{person.intro}</div>}
         {person.phone && <div className="attendee-contact">📞 {maskPhone(person.phone)}</div>}
         {person.email && <div className="attendee-contact">✉️ {person.email}</div>}
+        {person.doc_url && (
+          <a href={person.doc_url} target="_blank" rel="noopener noreferrer" className="card-doc-btn">📄 소개자료</a>
+        )}
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px', flexWrap: 'wrap' }}>
           <span className={`sector-tag st-${person.sector}`}>{person.tag}</span>
           {!demoting ? (
@@ -343,6 +346,9 @@ function WaitingCard({ person, onEdit, onConfirm }) {
         {person.intro && <div className="attendee-intro">{person.intro}</div>}
         {person.phone && <div className="attendee-contact">📞 {maskPhone(person.phone)}</div>}
         {person.email && <div className="attendee-contact">✉️ {person.email}</div>}
+        {person.doc_url && (
+          <a href={person.doc_url} target="_blank" rel="noopener noreferrer" className="card-doc-btn">📄 소개자료</a>
+        )}
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px', flexWrap: 'wrap' }}>
           <span className={`sector-tag st-${person.sector}`}>{person.tag}</span>
           {!confirming ? (
