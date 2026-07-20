@@ -10,7 +10,7 @@ export default async function handler(req, res) {
 
   const { data, error } = await supabase
     .from('rsvps')
-    .select('id, name, affiliation, intro, created_at')
+    .select('id, name, affiliation, intro, meeting_status, created_at')
     .eq('meeting_round', '2nd')
     .eq('approved', true)
     .eq('attendance', 'yes')

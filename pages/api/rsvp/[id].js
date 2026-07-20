@@ -4,12 +4,14 @@ export default async function handler(req, res) {
   if (req.method !== 'PATCH') return res.status(405).end()
 
   const { id } = req.query
-  const { contact, affiliation, intro } = req.body
+  const { contact, affiliation, intro, meeting_status } = req.body
 
   const updates = {}
-  if (contact     !== undefined) updates.contact     = contact     || null
-  if (affiliation !== undefined) updates.affiliation = affiliation || null
-  if (intro       !== undefined) updates.intro       = intro       || null
+  if (contact        !== undefined) updates.contact        = contact        || null
+  if (affiliation    !== undefined) updates.affiliation    = affiliation    || null
+  if (intro          !== undefined) updates.intro          = intro          || null
+  if (meeting_status !== undefined && ['confirmed', 'waiting'].includes(meeting_status))
+    updates.meeting_status = meeting_status
 
   if (Object.keys(updates).length === 0) {
     return res.status(400).json({ error: '업데이트할 내용이 없습니다.' })

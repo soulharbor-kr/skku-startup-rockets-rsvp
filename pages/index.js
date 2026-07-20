@@ -378,6 +378,7 @@ export default function Home() {
 
   // 2차 모임 RSVP
   const [rsvp2List,     setRsvp2List]     = useState([])
+  const [tab2,          setTab2]          = useState('confirmed')
   const [form, setForm] = useState({
     name: '', phone: '', email: '', affiliation: '', intro: '', attendance: 'yes', message: '',
   })
@@ -407,7 +408,22 @@ export default function Home() {
   }
 
   function handleAdminApprove(rsvp) {
-    setRsvp2List((prev) => [...prev, rsvp])
+    setRsvp2List((prev) => [...prev, { ...rsvp, meeting_status: 'confirmed' }])
+    setTab2('confirmed')
+  }
+
+  async function handleRsvp2StatusChange(item, newStatus) {
+    try {
+      const res = await fetch(`/api/rsvp/${item.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ meeting_status: newStatus }),
+      })
+      if (res.ok) {
+        setRsvp2List((prev) => prev.map((r) => r.id === item.id ? { ...r, meeting_status: newStatus } : r))
+        setTab2(newStatus)
+      }
+    } catch {}
   }
 
   async function handleConfirm(person) {
@@ -504,24 +520,52 @@ export default function Home() {
         <div className="section-label">2nd Meeting · 2026.08.27</div>
         <div className="section-title">제2회 모임 참석 신청</div>
 
-        {rsvp2List.length > 0 && (
-          <div style={{ marginBottom: '32px' }}>
-            <div style={{ fontSize: '0.82rem', color: 'var(--gold)', letterSpacing: '0.1em', marginBottom: '12px' }}>
-              참석 확정 {rsvp2List.length}명
-            </div>
-            <div className="rsvp2-grid">
-              {rsvp2List.map((r) => (
-                <div key={r.id} className="rsvp2-card">
-                  <div className="avatar avatar-blue">{r.name.slice(0, 2)}</div>
-                  <div>
-                    <div className="attendee-name">{r.name}</div>
-                    {r.affiliation && <div className="attendee-role">{r.affiliation}</div>}
-                  </div>
+        {(() => {
+          const confirmed2 = rsvp2List.filter((r) => r.meeting_status !== 'waiting')
+          const waiting2   = rsvp2List.filter((r) => r.meeting_status === 'waiting')
+          return (
+            <>
+              <div className="stats-bar">
+                <div className="stat-item">
+                  <div className="stat-num">{confirmed2.length}</div>
+                  <div className="stat-label">참석 확정</div>
                 </div>
-              ))}
-            </div>
-          </div>
-        )}
+                <div className="stat-item">
+                  <div className="stat-num">{waiting2.length}</div>
+                  <div className="stat-label">참석 대기</div>
+                </div>
+              </div>
+
+              <div className="attendee-tabs">
+                <button className={`tab-btn ${tab2 === 'confirmed' ? 'active' : ''}`} onClick={() => setTab2('confirmed')}>
+                  참석 확정 <span className="count-badge">{confirmed2.length}</span>
+                </button>
+                <button className={`tab-btn ${tab2 === 'waiting' ? 'active' : ''}`} onClick={() => setTab2('waiting')}>
+                  참석 대기 <span className="count-badge">{waiting2.length}</span>
+                </button>
+              </div>
+
+              <div className="rsvp2-grid">
+                {(tab2 === 'confirmed' ? confirmed2 : waiting2).map((r) => (
+                  <div key={r.id} className="rsvp2-card">
+                    <div className="avatar avatar-blue">{r.name.slice(0, 2)}</div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div className="attendee-name">{r.name}</div>
+                      {r.affiliation && <div className="attendee-role">{r.affiliation}</div>}
+                      <button
+                        className="card-demote-btn"
+                        style={{ marginTop: '6px' }}
+                        onClick={() => handleRsvp2StatusChange(r, tab2 === 'confirmed' ? 'waiting' : 'confirmed')}
+                      >
+                        {tab2 === 'confirmed' ? '→ 대기로 전환' : '→ 확정으로 전환'}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          )
+        })()}
 
         <div className="form-card">
           <div className="form-header">
