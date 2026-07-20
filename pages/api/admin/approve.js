@@ -25,32 +25,15 @@ export default async function handler(req, res) {
     return res.status(404).json({ error: '신청 내역을 찾을 수 없습니다.' })
   }
 
-  await supabase.from('rsvps').update({ approved: true }).eq('id', id)
+  const { error } = await supabase
+    .from('rsvps')
+    .update({ approved: true })
+    .eq('id', id)
 
-  // contact 필드는 "전화 / 이메일" 형태로 저장됨
-  const parts = (rsvp.contact || '').split(' / ').map((s) => s.trim()).filter(Boolean)
-  const phone = parts.find((s) => /^[\d\-+\s]+$/.test(s)) || null
-  const email = parts.find((s) => s.includes('@')) || null
-
-  const { data: attendee, error: insertError } = await supabase
-    .from('attendees')
-    .insert({
-      name:   rsvp.name,
-      role:   rsvp.affiliation || '',
-      sector: 'startup',
-      tag:    '신규',
-      status: 'confirmed',
-      intro:  rsvp.intro || null,
-      phone,
-      email,
-    })
-    .select()
-    .single()
-
-  if (insertError) {
-    console.error(insertError)
+  if (error) {
+    console.error(error)
     return res.status(500).json({ error: '처리 중 오류가 발생했습니다.' })
   }
 
-  return res.status(200).json({ attendee })
+  return res.status(200).json({ rsvp: { ...rsvp, approved: true } })
 }

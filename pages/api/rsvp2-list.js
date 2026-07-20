@@ -1,14 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 
-const ADMIN_PASSWORD = '1234'
-
 export default async function handler(req, res) {
-  if (req.method !== 'POST') return res.status(405).end()
-
-  const { password } = req.body
-  if (password !== ADMIN_PASSWORD) {
-    return res.status(401).json({ error: '비밀번호가 틀렸습니다.' })
-  }
+  if (req.method !== 'GET') return res.status(405).end()
 
   const supabase = createClient(
     process.env.SUPABASE_URL,
@@ -17,10 +10,10 @@ export default async function handler(req, res) {
 
   const { data, error } = await supabase
     .from('rsvps')
-    .select('*')
-    .eq('approved', false)
-    .eq('attendance', 'yes')
+    .select('id, name, affiliation, intro, created_at')
     .eq('meeting_round', '2nd')
+    .eq('approved', true)
+    .eq('attendance', 'yes')
     .order('created_at', { ascending: true })
 
   if (error) {

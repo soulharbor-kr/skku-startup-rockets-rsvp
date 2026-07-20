@@ -128,7 +128,7 @@ function AdminModal({ onClose, onApprove }) {
       const data = await res.json()
       if (res.ok) {
         setPending((prev) => prev.filter((r) => r.id !== rsvp.id))
-        onApprove(data.attendee)
+        onApprove(data.rsvp)
       }
     } catch {}
     finally { setActionId(null) }
@@ -369,12 +369,15 @@ function WaitingCard({ person, onEdit, onConfirm }) {
 
 /* ── 메인 페이지 ── */
 export default function Home() {
+  // 1차 모임 참석자
   const [confirmedList, setConfirmedList] = useState([])
   const [waitingList,   setWaitingList]   = useState([])
   const [tab,           setTab]           = useState('confirmed')
   const [editTarget,    setEditTarget]    = useState(null)
   const [showAdmin,     setShowAdmin]     = useState(false)
 
+  // 2차 모임 RSVP
+  const [rsvp2List,     setRsvp2List]     = useState([])
   const [form, setForm] = useState({
     name: '', phone: '', email: '', affiliation: '', intro: '', attendance: 'yes', message: '',
   })
@@ -391,6 +394,10 @@ export default function Home() {
         setConfirmedList(data.filter((a) => a.status === 'confirmed'))
         setWaitingList(data.filter((a) => a.status === 'waiting'))
       }).catch(() => {})
+    fetch('/api/rsvp2-list')
+      .then((r) => r.json())
+      .then((data) => { if (Array.isArray(data)) setRsvp2List(data) })
+      .catch(() => {})
   }, [])
 
   function handleEditSave(updated) {
@@ -399,9 +406,8 @@ export default function Home() {
     setEditTarget(null)
   }
 
-  function handleAdminApprove(attendee) {
-    setConfirmedList((prev) => [...prev, attendee])
-    setTab('confirmed')
+  function handleAdminApprove(rsvp) {
+    setRsvp2List((prev) => [...prev, rsvp])
   }
 
   async function handleConfirm(person) {
@@ -493,10 +499,118 @@ export default function Home() {
 
       <div className="divider" />
 
-      {/* ATTENDEES */}
+      {/* 2차 모임 RSVP */}
+      <section className="section" id="rsvp">
+        <div className="section-label">2nd Meeting · 2026.08.27</div>
+        <div className="section-title">제2회 모임 참석 신청</div>
+
+        {rsvp2List.length > 0 && (
+          <div style={{ marginBottom: '32px' }}>
+            <div style={{ fontSize: '0.82rem', color: 'var(--gold)', letterSpacing: '0.1em', marginBottom: '12px' }}>
+              참석 확정 {rsvp2List.length}명
+            </div>
+            <div className="rsvp2-grid">
+              {rsvp2List.map((r) => (
+                <div key={r.id} className="rsvp2-card">
+                  <div className="avatar avatar-blue">{r.name.slice(0, 2)}</div>
+                  <div>
+                    <div className="attendee-name">{r.name}</div>
+                    {r.affiliation && <div className="attendee-role">{r.affiliation}</div>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="form-card">
+          <div className="form-header">
+            <h2>참석 여부를 알려주세요</h2>
+            <p className="form-header-desc">
+              2026년 8월 27일 (목) 저녁 7시 · 강남구 테헤란로 217, 오렌지플래닛 4층<br />
+              신청 후 관리자 확인을 거쳐 위 명단에 등록됩니다.
+            </p>
+          </div>
+
+          {!submitted ? (
+            <form onSubmit={handleSubmit}>
+              <div className="form-group">
+                <label className="form-label">이름 *</label>
+                <input type="text" className="form-input" required value={form.name}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="홍길동" />
+              </div>
+              <div className="form-group">
+                <label className="form-label">소속 / 직책</label>
+                <input type="text" className="form-input" value={form.affiliation}
+                  onChange={(e) => setForm({ ...form, affiliation: e.target.value })} placeholder="회사명 · 직책" />
+              </div>
+              <div className="form-group">
+                <label className="form-label">전화번호</label>
+                <input type="tel" className="form-input" value={form.phone}
+                  onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="010-0000-0000" />
+              </div>
+              <div className="form-group">
+                <label className="form-label">이메일</label>
+                <input type="email" className="form-input" value={form.email}
+                  onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="email@example.com" />
+              </div>
+              <div className="form-group">
+                <label className="form-label">한 줄 자기소개</label>
+                <input type="text" className="form-input" value={form.intro}
+                  onChange={(e) => setForm({ ...form, intro: e.target.value })}
+                  placeholder="현재 하는 일이나 관심사를 짧게 소개해 주세요" />
+              </div>
+              <div className="form-group">
+                <label className="form-label">참석 여부 *</label>
+                <div className="radio-group">
+                  <label className={`radio-option ${form.attendance === 'yes' ? 'selected' : ''}`}>
+                    <input type="radio" name="attendance" value="yes" checked={form.attendance === 'yes'}
+                      onChange={(e) => setForm({ ...form, attendance: e.target.value })} />
+                    참석합니다
+                  </label>
+                  <label className={`radio-option ${form.attendance === 'no' ? 'selected' : ''}`}>
+                    <input type="radio" name="attendance" value="no" checked={form.attendance === 'no'}
+                      onChange={(e) => setForm({ ...form, attendance: e.target.value })} />
+                    불참합니다
+                  </label>
+                </div>
+              </div>
+              <div className="form-group">
+                <label className="form-label">메시지 (선택)</label>
+                <textarea className="form-textarea" rows={3} value={form.message}
+                  onChange={(e) => setForm({ ...form, message: e.target.value })}
+                  placeholder="간단한 인사나 전달사항을 남겨주세요" />
+              </div>
+              {error && <div className="form-error">{error}</div>}
+              <button type="submit" className="form-submit" disabled={submitting}>
+                {submitting ? '제출 중...' : '참석 신청하기'}
+              </button>
+            </form>
+          ) : (
+            <div className="success-message">
+              <div className="success-icon">✓</div>
+              {form.attendance === 'yes' ? (
+                <>
+                  <h3>{submittedName}님, 신청이 접수되었습니다!</h3>
+                  <p>{'관리자 확인 후 참석 확정 명단에 등록됩니다.\n잠시만 기다려 주세요.'}</p>
+                </>
+              ) : (
+                <>
+                  <h3>{submittedName}님, 응답해 주셔서 감사합니다</h3>
+                  <p>{'아쉽지만 다음 모임에서 함께하길 기대합니다!'}</p>
+                </>
+              )}
+            </div>
+          )}
+        </div>
+      </section>
+
+      <div className="divider" />
+
+      {/* 1차 모임 참석자 */}
       <section className="section">
-        <div className="section-label">Attendees</div>
-        <div className="section-title">참석 예정 멤버</div>
+        <div className="section-label">1st Meeting · 2026.06.02</div>
+        <div className="section-title">1차 모임 참석자</div>
 
         <div className="stats-bar">
           <div className="stat-item">
@@ -506,10 +620,6 @@ export default function Home() {
           <div className="stat-item">
             <div className="stat-num">{waitingList.length}</div>
             <div className="stat-label">참석 대기</div>
-          </div>
-          <div className="stat-item">
-            <div className="stat-num">{confirmedList.length + waitingList.length}</div>
-            <div className="stat-label">총 예상 인원</div>
           </div>
         </div>
 
@@ -540,97 +650,11 @@ export default function Home() {
 
       <div className="divider" />
 
-      {/* GALLERY */}
+      {/* 1차 모임 갤러리 */}
       <GallerySection />
 
       <div className="divider" />
 
-      {/* RSVP FORM */}
-      <div className="form-section" id="rsvp">
-        <div className="form-card">
-          <div className="form-header">
-            <div className="section-label">신규 참석 신청</div>
-            <h2>아직 명단에 없으신가요?</h2>
-            <p className="form-header-desc">
-              위 명단에 이미 있으신 분은 카드의 ✏️ 버튼으로 정보를 수정해 주세요.<br />
-              신규 신청은 관리자 확인 후 참석 확정 명단에 등록됩니다.
-            </p>
-          </div>
-
-          {!submitted ? (
-            <form onSubmit={handleSubmit}>
-              <div className="form-group">
-                <label className="form-label">이름 *</label>
-                <input type="text" className="form-input" required value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="홍길동" />
-              </div>
-              <div className="form-group">
-                <label className="form-label">소속 / 직책</label>
-                <input type="text" className="form-input" value={form.affiliation}
-                  onChange={(e) => setForm({ ...form, affiliation: e.target.value })} placeholder="회사명 · 직책" />
-              </div>
-              <div className="form-group">
-                <label className="form-label">전화번호</label>
-                <input type="tel" className="form-input" value={form.phone}
-                  onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                  placeholder="010-0000-0000" />
-              </div>
-              <div className="form-group">
-                <label className="form-label">이메일</label>
-                <input type="email" className="form-input" value={form.email}
-                  onChange={(e) => setForm({ ...form, email: e.target.value })}
-                  placeholder="email@example.com" />
-              </div>
-              <div className="form-group">
-                <label className="form-label">한 줄 자기소개</label>
-                <input type="text" className="form-input" value={form.intro}
-                  onChange={(e) => setForm({ ...form, intro: e.target.value })}
-                  placeholder="현재 하는 일이나 관심사를 짧게 소개해 주세요" />
-              </div>
-              <div className="form-group">
-                <label className="form-label">참석 여부 *</label>
-                <div className="radio-group">
-                  <label className={`radio-label ${form.attendance === 'yes' ? 'checked' : ''}`}>
-                    <input type="radio" name="attendance" value="yes" checked={form.attendance === 'yes'}
-                      onChange={() => setForm({ ...form, attendance: 'yes' })} />
-                    <span className="radio-indicator" />참석합니다
-                  </label>
-                  <label className={`radio-label ${form.attendance === 'no' ? 'checked' : ''}`}>
-                    <input type="radio" name="attendance" value="no" checked={form.attendance === 'no'}
-                      onChange={() => setForm({ ...form, attendance: 'no' })} />
-                    <span className="radio-indicator" />불참합니다
-                  </label>
-                </div>
-              </div>
-              <div className="form-group">
-                <label className="form-label">메시지 (선택)</label>
-                <textarea className="form-textarea" value={form.message}
-                  onChange={(e) => setForm({ ...form, message: e.target.value })}
-                  placeholder="간단한 인사나 전달사항을 남겨주세요" />
-              </div>
-              {error && <div className="form-error">{error}</div>}
-              <button type="submit" className="submit-btn" disabled={submitting}>
-                {submitting ? '전송 중...' : '참석 신청하기'}
-              </button>
-            </form>
-          ) : (
-            <div className="success-message">
-              <div className="success-icon">✓</div>
-              {form.attendance === 'yes' ? (
-                <>
-                  <h3>{submittedName}님, 신청이 접수되었습니다!</h3>
-                  <p>{'관리자 확인 후 참석 확정 명단에 등록됩니다.\n잠시만 기다려 주세요.'}</p>
-                </>
-              ) : (
-                <>
-                  <h3>{submittedName}님, 응답해 주셔서 감사합니다</h3>
-                  <p>{'아쉽지만 다음 모임에서 함께하길 기대합니다.\n언제든지 연락 주세요!'}</p>
-                </>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
 
       <footer>
         문의 · 홍성완 (성균관대 창업지원단)&nbsp;&nbsp;|&nbsp;&nbsp;2026 SKKU 스타트업 얼라이언스 모임
