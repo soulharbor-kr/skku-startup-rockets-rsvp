@@ -3,7 +3,7 @@
   --white: #fafaf8;
   --gold: #c8a96e;
   --gold-light: #e8d5a8;
-  --gray: #6b6b6b;
+  --gray: #8c8c88;
   --gray-light: #d4d4cc;
   --surface: #1a1a18;
   --surface2: #222220;
@@ -114,7 +114,7 @@ body {
 
 .hero-notice {
   font-size: 12.5px;
-  color: #7a6a4a;
+  color: #a08848;
   letter-spacing: 0.04em;
 }
 
@@ -241,7 +241,7 @@ body {
 
 .attendee-name { font-size: 14px; font-weight: 400; color: var(--white); }
 .attendee-role { font-size: 11.5px; color: var(--gray); margin-top: 2px; line-height: 1.4; }
-.attendee-intro { font-size: 11px; color: #555; margin-top: 4px; line-height: 1.5; }
+.attendee-intro { font-size: 11px; color: #7e7e7a; margin-top: 4px; line-height: 1.5; }
 
 .sector-tag {
   display: inline-block;
@@ -497,7 +497,7 @@ footer {
 
 .attendee-contact {
   font-size: 11px;
-  color: #555;
+  color: #7e7e7a;
   margin-top: 3px;
   letter-spacing: 0.02em;
 }
@@ -718,7 +718,7 @@ footer {
 }
 
 .rsvp2-card .attendee-name { font-size: 0.95rem; }
-.rsvp2-card .attendee-role { font-size: 0.78rem; opacity: 0.6; margin-top: 2px; }
+.rsvp2-card .attendee-role { font-size: 0.78rem; margin-top: 2px; }
 
 /* form-submit */
 .form-submit {
@@ -901,8 +901,8 @@ footer {
 
 .admin-rsvp-name    { font-size: 14px; font-weight: 400; color: var(--white); }
 .admin-rsvp-sub     { font-size: 12px; color: var(--gray); margin-top: 2px; }
-.admin-rsvp-intro   { font-size: 11px; color: #555; margin-top: 4px; font-style: italic; }
-.admin-rsvp-contact { font-size: 11px; color: #555; margin-top: 3px; }
+.admin-rsvp-intro   { font-size: 11px; color: #7e7e7a; margin-top: 4px; font-style: italic; }
+.admin-rsvp-contact { font-size: 11px; color: #7e7e7a; margin-top: 3px; }
 .admin-rsvp-message { font-size: 11px; color: #444; margin-top: 3px; }
 
 .admin-rsvp-actions { display: flex; gap: 6px; flex-shrink: 0; padding-top: 2px; }
