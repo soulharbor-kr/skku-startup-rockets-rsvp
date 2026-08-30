@@ -216,6 +216,31 @@ function AdminModal({ onClose, onApprove }) {
 }
 
 /* ── 갤러리 ── */
+const GALLERY_2ND_BASE = '/gallery/2nd-20260827/'
+const GALLERY_2ND_IMAGES = [
+  'KakaoTalk_20260827_191839938.jpg',
+  'KakaoTalk_20260827_191839938_01.jpg',
+  'KakaoTalk_20260827_191839938_02.jpg',
+  'KakaoTalk_20260827_193310671.jpg',
+  'KakaoTalk_20260827_193310671_01.jpg',
+  'KakaoTalk_20260827_210754926_01.jpg',
+  'KakaoTalk_20260827_220633195.jpg',
+  'KakaoTalk_20260827_220633195_01.jpg',
+  'KakaoTalk_20260827_220633195_02.jpg',
+  'KakaoTalk_20260827_220633195_03.jpg',
+  'KakaoTalk_20260827_220633195_04.jpg',
+  'KakaoTalk_20260827_220633195_05.jpg',
+  'KakaoTalk_20260827_220633195_06.jpg',
+  'KakaoTalk_20260827_220633195_07.jpg',
+  'KakaoTalk_20260827_220633195_08.jpg',
+  'KakaoTalk_20260827_220633195_09.jpg',
+  'KakaoTalk_20260827_220633195_10.jpg',
+  'KakaoTalk_20260827_220701068.jpg',
+  'KakaoTalk_20260828_083734449.jpg',
+  'KakaoTalk_20260828_083734449_01.jpg',
+  'KakaoTalk_20260828_083734449_02.jpg',
+]
+
 const GALLERY_IMAGES = [
   'KakaoTalk_20260604_164735528.jpg',
   'KakaoTalk_20260604_164735528_01.jpg',
@@ -239,6 +264,11 @@ const GALLERY_IMAGES = [
 ]
 const GALLERY_BASE = '/gallery/1st-20260602/'
 
+const GALLERY_ALL = [
+  ...GALLERY_2ND_IMAGES.map((f) => GALLERY_2ND_BASE + f),
+  ...GALLERY_IMAGES.map((f) => GALLERY_BASE + f),
+]
+
 function GallerySection() {
   const [lightbox, setLightbox] = useState(null)
 
@@ -246,7 +276,7 @@ function GallerySection() {
     if (lightbox === null) return
     const onKey = (e) => {
       if (e.key === 'Escape')      setLightbox(null)
-      if (e.key === 'ArrowRight')  setLightbox((p) => Math.min(p + 1, GALLERY_IMAGES.length - 1))
+      if (e.key === 'ArrowRight')  setLightbox((p) => Math.min(p + 1, GALLERY_ALL.length - 1))
       if (e.key === 'ArrowLeft')   setLightbox((p) => Math.max(p - 1, 0))
     }
     window.addEventListener('keydown', onKey)
@@ -257,12 +287,21 @@ function GallerySection() {
   return (
     <section className="section">
       <div className="section-label">Gallery</div>
-      <div className="section-title">1차 모임 사진 · 2026.06.02</div>
 
+      <div className="section-title">2차 모임 사진 · 2026.08.27</div>
+      <div className="gallery-grid">
+        {GALLERY_2ND_IMAGES.map((f, i) => (
+          <button key={f} className="gallery-thumb" onClick={() => setLightbox(i)}>
+            <img src={GALLERY_2ND_BASE + f} alt={`2차 모임 사진 ${i + 1}`} loading="lazy" />
+          </button>
+        ))}
+      </div>
+
+      <div className="section-title" style={{ marginTop: 40 }}>1차 모임 사진 · 2026.06.02</div>
       <div className="gallery-grid">
         {GALLERY_IMAGES.map((f, i) => (
-          <button key={f} className="gallery-thumb" onClick={() => setLightbox(i)}>
-            <img src={GALLERY_BASE + f} alt={`모임 사진 ${i + 1}`} loading="lazy" />
+          <button key={f} className="gallery-thumb" onClick={() => setLightbox(GALLERY_2ND_IMAGES.length + i)}>
+            <img src={GALLERY_BASE + f} alt={`1차 모임 사진 ${i + 1}`} loading="lazy" />
           </button>
         ))}
       </div>
@@ -271,7 +310,7 @@ function GallerySection() {
         <div className="gallery-lightbox" onClick={() => setLightbox(null)}>
           <button className="gallery-lb-close" onClick={() => setLightbox(null)}>✕</button>
           <img
-            src={GALLERY_BASE + GALLERY_IMAGES[lightbox]}
+            src={GALLERY_ALL[lightbox]}
             alt={`모임 사진 ${lightbox + 1}`}
             className="gallery-lb-media"
             onClick={(e) => e.stopPropagation()}
@@ -279,10 +318,10 @@ function GallerySection() {
           {lightbox > 0 && (
             <button className="gallery-lb-prev" onClick={(e) => { e.stopPropagation(); setLightbox(lightbox - 1) }}>‹</button>
           )}
-          {lightbox < GALLERY_IMAGES.length - 1 && (
+          {lightbox < GALLERY_ALL.length - 1 && (
             <button className="gallery-lb-next" onClick={(e) => { e.stopPropagation(); setLightbox(lightbox + 1) }}>›</button>
           )}
-          <div className="gallery-lb-counter">{lightbox + 1} / {GALLERY_IMAGES.length}</div>
+          <div className="gallery-lb-counter">{lightbox + 1} / {GALLERY_ALL.length}</div>
         </div>
       )}
     </section>
