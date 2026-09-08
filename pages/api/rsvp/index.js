@@ -21,7 +21,7 @@ export default async function handler(req, res) {
 
   const { data, error } = await supabase
     .from('rsvps')
-    .insert({ name: name.trim(), contact: contact || null, affiliation, intro, attendance, message })
+    .insert({ name: name.trim(), contact: contact || null, affiliation, intro, attendance, message, meeting_round: '3rd' })
     .select()
     .single()
 

@@ -406,6 +406,55 @@ function WaitingCard({ person, onEdit, onConfirm }) {
   )
 }
 
+/* ── 회차별 RSVP 명단 (확정/대기 탭) ── */
+function RsvpMeetingList({ list, tab, setTab, onStatusChange }) {
+  const confirmed = list.filter((r) => r.meeting_status !== 'waiting')
+  const waiting   = list.filter((r) => r.meeting_status === 'waiting')
+
+  return (
+    <>
+      <div className="stats-bar">
+        <div className="stat-item">
+          <div className="stat-num">{confirmed.length}</div>
+          <div className="stat-label">참석 확정</div>
+        </div>
+        <div className="stat-item">
+          <div className="stat-num">{waiting.length}</div>
+          <div className="stat-label">참석 대기</div>
+        </div>
+      </div>
+
+      <div className="attendee-tabs">
+        <button className={`tab-btn ${tab === 'confirmed' ? 'active' : ''}`} onClick={() => setTab('confirmed')}>
+          참석 확정 <span className="count-badge">{confirmed.length}</span>
+        </button>
+        <button className={`tab-btn ${tab === 'waiting' ? 'active' : ''}`} onClick={() => setTab('waiting')}>
+          참석 대기 <span className="count-badge">{waiting.length}</span>
+        </button>
+      </div>
+
+      <div className="rsvp2-grid">
+        {(tab === 'confirmed' ? confirmed : waiting).map((r) => (
+          <div key={r.id} className="rsvp2-card">
+            <div className="avatar avatar-blue">{r.name.slice(0, 2)}</div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div className="attendee-name">{r.name}</div>
+              {r.affiliation && <div className="attendee-role">{r.affiliation}</div>}
+              <button
+                className="card-demote-btn"
+                style={{ marginTop: '6px' }}
+                onClick={() => onStatusChange(r, tab === 'confirmed' ? 'waiting' : 'confirmed')}
+              >
+                {tab === 'confirmed' ? '→ 대기로 전환' : '→ 확정으로 전환'}
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </>
+  )
+}
+
 /* ── 메인 페이지 ── */
 export default function Home() {
   // 1차 모임 참석자
@@ -415,7 +464,11 @@ export default function Home() {
   const [editTarget,    setEditTarget]    = useState(null)
   const [showAdmin,     setShowAdmin]     = useState(false)
 
-  // 2차 모임 RSVP
+  // 3차 모임 RSVP (현재 진행)
+  const [rsvp3List,     setRsvp3List]     = useState([])
+  const [tab3,          setTab3]          = useState('confirmed')
+
+  // 2차 모임 RSVP (지난 기록)
   const [rsvp2List,     setRsvp2List]     = useState([])
   const [tab2,          setTab2]          = useState('confirmed')
   const [form, setForm] = useState({
@@ -434,6 +487,10 @@ export default function Home() {
         setConfirmedList(data.filter((a) => a.status === 'confirmed'))
         setWaitingList(data.filter((a) => a.status === 'waiting'))
       }).catch(() => {})
+    fetch('/api/rsvp3-list')
+      .then((r) => r.json())
+      .then((data) => { if (Array.isArray(data)) setRsvp3List(data) })
+      .catch(() => {})
     fetch('/api/rsvp2-list')
       .then((r) => r.json())
       .then((data) => { if (Array.isArray(data)) setRsvp2List(data) })
@@ -447,11 +504,11 @@ export default function Home() {
   }
 
   function handleAdminApprove(rsvp) {
-    setRsvp2List((prev) => [...prev, { ...rsvp, meeting_status: 'confirmed' }])
-    setTab2('confirmed')
+    setRsvp3List((prev) => [...prev, { ...rsvp, meeting_status: 'confirmed' }])
+    setTab3('confirmed')
   }
 
-  async function handleRsvp2StatusChange(item, newStatus) {
+  async function handleRsvpStatusChange(item, newStatus, setList, setTab) {
     try {
       const res = await fetch(`/api/rsvp/${item.id}`, {
         method: 'PATCH',
@@ -459,8 +516,8 @@ export default function Home() {
         body: JSON.stringify({ meeting_status: newStatus }),
       })
       if (res.ok) {
-        setRsvp2List((prev) => prev.map((r) => r.id === item.id ? { ...r, meeting_status: newStatus } : r))
-        setTab2(newStatus)
+        setList((prev) => prev.map((r) => r.id === item.id ? { ...r, meeting_status: newStatus } : r))
+        setTab(newStatus)
       }
     } catch {}
   }
@@ -517,7 +574,7 @@ export default function Home() {
     <>
       <Head>
         <title>SKKU 스타트업 얼라이언스 모임 — RSVP</title>
-        <meta name="description" content="제2회 SKKU 스타트업 얼라이언스 모임 | 2026년 8월 27일 강남구 테헤란로 217 오렌지플래닛 4층" />
+        <meta name="description" content="제3회 SKKU 스타트업 얼라이언스 모임 | 2026년 11월 13일 강남구 테헤란로 217 오렌지플래닛 4층" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
 
@@ -527,14 +584,14 @@ export default function Home() {
       {/* HERO */}
       <section className="hero">
         <div className="hero-line" />
-        <div className="hero-eyebrow">제2회 · SKKU Startup Alliance · 2026</div>
+        <div className="hero-eyebrow">제3회 · SKKU Startup Alliance · 2026</div>
         <h1 className="hero-title">SKKU 스타트업<br /><em>얼라이언스 모임</em></h1>
         <p className="hero-desc">
           격식 없이, 반가운 얼굴들끼리 편하게 모이는 자리입니다.<br />
           <span className="hero-notice">※ 05학번 이상 선배님께는 소정의 참가비 <em>3만원</em>을 양해 부탁드립니다.</span>
         </p>
         <div className="hero-meta">
-          <div><strong>2026년 8월 27일 (목)</strong></div>
+          <div><strong>2026년 11월 13일 (금)</strong></div>
           <div>저녁 7:00</div>
           <div>
             <a href="https://naver.me/FqWtGAEK" target="_blank" rel="noopener noreferrer"
@@ -554,63 +611,23 @@ export default function Home() {
 
       <div className="divider" />
 
-      {/* 2차 모임 RSVP */}
+      {/* 3차 모임 RSVP (현재 진행) */}
       <section className="section" id="rsvp">
-        <div className="section-label">2nd Meeting · 2026.08.27</div>
-        <div className="section-title">제2회 모임 참석 신청</div>
+        <div className="section-label">3rd Meeting · 2026.11.13</div>
+        <div className="section-title">제3회 모임 참석 신청</div>
 
-        {(() => {
-          const confirmed2 = rsvp2List.filter((r) => r.meeting_status !== 'waiting')
-          const waiting2   = rsvp2List.filter((r) => r.meeting_status === 'waiting')
-          return (
-            <>
-              <div className="stats-bar">
-                <div className="stat-item">
-                  <div className="stat-num">{confirmed2.length}</div>
-                  <div className="stat-label">참석 확정</div>
-                </div>
-                <div className="stat-item">
-                  <div className="stat-num">{waiting2.length}</div>
-                  <div className="stat-label">참석 대기</div>
-                </div>
-              </div>
-
-              <div className="attendee-tabs">
-                <button className={`tab-btn ${tab2 === 'confirmed' ? 'active' : ''}`} onClick={() => setTab2('confirmed')}>
-                  참석 확정 <span className="count-badge">{confirmed2.length}</span>
-                </button>
-                <button className={`tab-btn ${tab2 === 'waiting' ? 'active' : ''}`} onClick={() => setTab2('waiting')}>
-                  참석 대기 <span className="count-badge">{waiting2.length}</span>
-                </button>
-              </div>
-
-              <div className="rsvp2-grid">
-                {(tab2 === 'confirmed' ? confirmed2 : waiting2).map((r) => (
-                  <div key={r.id} className="rsvp2-card">
-                    <div className="avatar avatar-blue">{r.name.slice(0, 2)}</div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div className="attendee-name">{r.name}</div>
-                      {r.affiliation && <div className="attendee-role">{r.affiliation}</div>}
-                      <button
-                        className="card-demote-btn"
-                        style={{ marginTop: '6px' }}
-                        onClick={() => handleRsvp2StatusChange(r, tab2 === 'confirmed' ? 'waiting' : 'confirmed')}
-                      >
-                        {tab2 === 'confirmed' ? '→ 대기로 전환' : '→ 확정으로 전환'}
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </>
-          )
-        })()}
+        <RsvpMeetingList
+          list={rsvp3List}
+          tab={tab3}
+          setTab={setTab3}
+          onStatusChange={(r, s) => handleRsvpStatusChange(r, s, setRsvp3List, setTab3)}
+        />
 
         <div className="form-card">
           <div className="form-header">
             <h2>참석 여부를 알려주세요</h2>
             <p className="form-header-desc">
-              2026년 8월 27일 (목) 저녁 7시 · 강남구 테헤란로 217, 오렌지플래닛 4층<br />
+              2026년 11월 13일 (금) 저녁 7시 · 강남구 테헤란로 217, 오렌지플래닛 4층<br />
               신청 후 관리자 확인을 거쳐 위 명단에 등록됩니다.
             </p>
           </div>
@@ -690,6 +707,21 @@ export default function Home() {
 
       <div className="divider" />
 
+      {/* 2차 모임 참석자 (지난 기록) */}
+      <section className="section">
+        <div className="section-label">2nd Meeting · 2026.08.27</div>
+        <div className="section-title">2차 모임 참석자</div>
+
+        <RsvpMeetingList
+          list={rsvp2List}
+          tab={tab2}
+          setTab={setTab2}
+          onStatusChange={(r, s) => handleRsvpStatusChange(r, s, setRsvp2List, setTab2)}
+        />
+      </section>
+
+      <div className="divider" />
+
       {/* 1차 모임 참석자 */}
       <section className="section">
         <div className="section-label">1st Meeting · 2026.06.02</div>
@@ -733,7 +765,7 @@ export default function Home() {
 
       <div className="divider" />
 
-      {/* 1차 모임 갤러리 */}
+      {/* 모임 갤러리 */}
       <GallerySection />
 
       <div className="divider" />
