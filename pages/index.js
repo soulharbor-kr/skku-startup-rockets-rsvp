@@ -407,7 +407,12 @@ function WaitingCard({ person, onEdit, onConfirm }) {
 }
 
 /* ── 회차별 RSVP 명단 (확정/대기 탭) ── */
-function RsvpMeetingList({ list, tab, setTab, onStatusChange }) {
+function RsvpMeetingList({
+  list, tab, setTab, onStatusChange,
+  confirmedLabel = '참석 확정', waitingLabel = '참석 대기',
+  toWaitingLabel = '→ 대기로 전환', toConfirmedLabel = '→ 확정으로 전환',
+  nameOnly = false,
+}) {
   const confirmed = list.filter((r) => r.meeting_status !== 'waiting')
   const waiting   = list.filter((r) => r.meeting_status === 'waiting')
 
@@ -416,20 +421,20 @@ function RsvpMeetingList({ list, tab, setTab, onStatusChange }) {
       <div className="stats-bar">
         <div className="stat-item">
           <div className="stat-num">{confirmed.length}</div>
-          <div className="stat-label">참석 확정</div>
+          <div className="stat-label">{confirmedLabel}</div>
         </div>
         <div className="stat-item">
           <div className="stat-num">{waiting.length}</div>
-          <div className="stat-label">참석 대기</div>
+          <div className="stat-label">{waitingLabel}</div>
         </div>
       </div>
 
       <div className="attendee-tabs">
         <button className={`tab-btn ${tab === 'confirmed' ? 'active' : ''}`} onClick={() => setTab('confirmed')}>
-          참석 확정 <span className="count-badge">{confirmed.length}</span>
+          {confirmedLabel} <span className="count-badge">{confirmed.length}</span>
         </button>
         <button className={`tab-btn ${tab === 'waiting' ? 'active' : ''}`} onClick={() => setTab('waiting')}>
-          참석 대기 <span className="count-badge">{waiting.length}</span>
+          {waitingLabel} <span className="count-badge">{waiting.length}</span>
         </button>
       </div>
 
@@ -439,13 +444,13 @@ function RsvpMeetingList({ list, tab, setTab, onStatusChange }) {
             <div className="avatar avatar-blue">{r.name.slice(0, 2)}</div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div className="attendee-name">{r.name}</div>
-              {r.affiliation && <div className="attendee-role">{r.affiliation}</div>}
+              {!nameOnly && r.affiliation && <div className="attendee-role">{r.affiliation}</div>}
               <button
                 className="card-demote-btn"
                 style={{ marginTop: '6px' }}
                 onClick={() => onStatusChange(r, tab === 'confirmed' ? 'waiting' : 'confirmed')}
               >
-                {tab === 'confirmed' ? '→ 대기로 전환' : '→ 확정으로 전환'}
+                {tab === 'confirmed' ? toWaitingLabel : toConfirmedLabel}
               </button>
             </div>
           </div>
@@ -717,6 +722,11 @@ export default function Home() {
           tab={tab2}
           setTab={setTab2}
           onStatusChange={(r, s) => handleRsvpStatusChange(r, s, setRsvp2List, setTab2)}
+          confirmedLabel="참석"
+          waitingLabel="불참"
+          toWaitingLabel="→ 불참으로 전환"
+          toConfirmedLabel="→ 참석으로 전환"
+          nameOnly
         />
       </section>
 
